@@ -1,0 +1,10 @@
+{
+  "name": "nestgres",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A small NestJS and PostgreSQL admin API built for hands-on backend practice.",
+  "workspaces": [
+    "apps/*"
+  ], 
+  "scripts": {}
+}
