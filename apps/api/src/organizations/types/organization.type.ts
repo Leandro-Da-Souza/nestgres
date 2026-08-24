@@ -3,5 +3,5 @@ export type OrganizationType = {
   name: string;
   plan: string;
   countryCode: string;
-  createdAt: string;
+  createdAt: Date | null;
 };
