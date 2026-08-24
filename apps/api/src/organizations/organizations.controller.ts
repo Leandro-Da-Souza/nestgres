@@ -5,10 +5,12 @@ import {
   Param,
   ParseIntPipe,
   Body,
+  Patch,
 } from '@nestjs/common';
 import type { OrganizationType } from './types/organizationType';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -30,5 +32,13 @@ export class OrganizationsController {
     @Body() body: CreateOrganizationDto,
   ): Promise<OrganizationType> {
     return this.organizationsService.createOrganization(body);
+  }
+
+  @Patch(':id')
+  updateOrganization(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() changes: UpdateOrganizationDto,
+  ): Promise<OrganizationType> {
+    return this.organizationsService.updateOrganization(id, changes);
   }
 }

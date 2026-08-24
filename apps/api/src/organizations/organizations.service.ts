@@ -3,11 +3,13 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import type { OrganizationType } from './types/organizationType';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 @Injectable()
 export class OrganizationsService {
@@ -84,6 +86,60 @@ export class OrganizationsService {
       throw new InternalServerErrorException(
         'Organization was created but not returned',
       );
+    }
+
+    return organization;
+  }
+
+  public async updateOrganization(
+    id: number,
+    changes: UpdateOrganizationDto,
+  ): Promise<OrganizationType> {
+    const assignments: string[] = [];
+    const values: Array<string | number> = [];
+
+    if (changes.name !== undefined) {
+      values.push(changes.name);
+      assignments.push(`name = $${values.length}`);
+    }
+
+    if (changes.plan !== undefined) {
+      values.push(changes.plan);
+      assignments.push(`plan = $${values.length}`);
+    }
+
+    if (changes.countryCode !== undefined) {
+      values.push(changes.countryCode);
+      assignments.push(`country_code = $${values.length}`);
+    }
+
+    if (assignments.length === 0) {
+      throw new BadRequestException('No changes provided');
+    }
+
+    values.push(id);
+    const idPlaceholder = `$${values.length}`;
+
+    const query = {
+      text: `
+        UPDATE organizations
+        SET ${assignments.join(', ')}
+        WHERE id = ${idPlaceholder}
+        RETURNING
+            id,
+            name,
+            plan,
+            country_code AS "countryCode",
+            created_at AS "createdAt"
+      `,
+      values: values,
+    };
+
+    const result = await this.pool.query<OrganizationType>(query);
+    const organization = result.rows[0];
+
+    if (!organization) {
+      throw new NotFoundException(`Organization ${id} not found.`);
     }
 
     return organization;
