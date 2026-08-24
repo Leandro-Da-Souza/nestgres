@@ -5,6 +5,13 @@
   "description": "A small NestJS and PostgreSQL admin API built for hands-on backend practice.",
   "workspaces": [
     "apps/*"
-  ], 
-  "scripts": {}
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm run start:dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
 }
