@@ -6,6 +6,9 @@ import {
   ParseIntPipe,
   Body,
   Patch,
+  Delete,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import type { OrganizationType } from './types/organizationType';
 import { OrganizationsService } from './organizations.service';
@@ -40,5 +43,11 @@ export class OrganizationsController {
     @Body() changes: UpdateOrganizationDto,
   ): Promise<OrganizationType> {
     return this.organizationsService.updateOrganization(id, changes);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteOrganization(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.organizationsService.deleteOrganization(id);
   }
 }

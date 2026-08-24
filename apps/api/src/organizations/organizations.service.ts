@@ -4,12 +4,14 @@ import {
   NotFoundException,
   InternalServerErrorException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import type { OrganizationType } from './types/organizationType';
 import { PG_POOL } from '../database/database.constants';
-import { Pool } from 'pg';
+import { Pool, QueryResultRow } from 'pg';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { DeletedOrganizationRow } from './types/deletedOrganizationRow';
 
 @Injectable()
 export class OrganizationsService {
@@ -143,5 +145,38 @@ export class OrganizationsService {
     }
 
     return organization;
+  }
+
+  public async deleteOrganization(id: number): Promise<void> {
+    const query = {
+      text: `
+        DELETE FROM organizations
+        WHERE id = $1
+        RETURNING id
+      `,
+      values: [id],
+    };
+
+    try {
+      const result = await this.pool.query<DeletedOrganizationRow>(query);
+      const deletedOrganization = result.rows[0];
+
+      if (!deletedOrganization) {
+        throw new NotFoundException(`Organization ${id} not found.`);
+      }
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === '23503'
+      ) {
+        throw new ConflictException(
+          `Organization ${id} cannot be deleted because it has related records.`,
+        );
+      }
+
+      throw error;
+    }
   }
 }
