@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import type { OrganizationType } from './types/organization.type';
 
@@ -6,7 +6,13 @@ import type { OrganizationType } from './types/organization.type';
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
   @Get()
-  async getOrganizations(): Promise<OrganizationType[]> {
-    return await this.organizationsService.getOrganizations();
+  getOrganizations(): Promise<OrganizationType[]> {
+    return this.organizationsService.fetchOrganizations();
+  }
+  @Get(':id')
+  getOrganizationById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<OrganizationType> {
+    return this.organizationsService.fetchOrganizationById(id);
   }
 }

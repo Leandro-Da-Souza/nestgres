@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { OrganizationType } from './types/organization.type';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
@@ -10,17 +10,7 @@ export class OrganizationsService {
     private readonly pool: Pool,
   ) {}
 
-  private readonly organizations: OrganizationType[] = [
-    {
-      id: 1,
-      name: 'Null Incorporated',
-      countryCode: 'SE',
-      plan: 'free',
-      createdAt: new Date('2024-05-06'),
-    },
-  ];
-
-  public async getOrganizations(): Promise<OrganizationType[]> {
+  public async fetchOrganizations(): Promise<OrganizationType[]> {
     const query = {
       text: `
       SELECT
@@ -35,5 +25,30 @@ export class OrganizationsService {
 
     const res = await this.pool.query<OrganizationType>(query);
     return res.rows;
+  }
+
+  public async fetchOrganizationById(id: number): Promise<OrganizationType> {
+    const query = {
+      text: `
+        SELECT
+          id,
+          name,
+          plan,
+          country_code AS "countryCode",
+          created_at AS "createdAt"
+        FROM organizations
+        WHERE id = $1
+      `,
+      values: [id],
+    };
+
+    const res = await this.pool.query<OrganizationType>(query);
+    const organization = res.rows[0];
+
+    if (!organization) {
+      throw new NotFoundException(`Organization ${id} not found.`);
+    }
+
+    return organization;
   }
 }
