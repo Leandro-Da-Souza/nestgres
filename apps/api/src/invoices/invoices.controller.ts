@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
@@ -37,5 +40,11 @@ export class InvoicesController {
     @Body() changes: UpdateInvoiceDto,
   ) {
     return this.invoiceService.updateInvoice(id, changes);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteInvoice(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.invoiceService.deleteInvoice(id);
   }
 }

@@ -224,4 +224,22 @@ export class InvoicesService {
       throw error;
     }
   }
+
+  public async deleteInvoice(id: number): Promise<void> {
+    const query = {
+      text: `
+        DELETE FROM invoices
+        WHERE id = $1
+        RETURNING id
+      `,
+      values: [id],
+    };
+
+    const result = await this.pool.query<{ id: number }>(query);
+    const deletedInvoice = result.rows[0];
+
+    if (!deletedInvoice) {
+      throw new NotFoundException(`Invoice ${id} not found`);
+    }
+  }
 }
