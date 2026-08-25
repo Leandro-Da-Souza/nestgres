@@ -10,6 +10,7 @@ import { Pool } from 'pg';
 import type { InvoiceType } from './types/invoiceType';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { isPostgresError } from '../database/utils/is-postgres-error';
+import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 
 @Injectable()
 export class InvoicesService {
@@ -17,6 +18,16 @@ export class InvoicesService {
     @Inject(PG_POOL)
     private readonly pool: Pool,
   ) {}
+
+  INVOICE_COLUMNS = {
+    organizationId: 'organization_id',
+    amount: 'amount',
+    currency: 'currency',
+    status: 'status',
+    issuedOn: 'issued_on',
+    dueOn: 'due_on',
+    paidAt: 'paid_at',
+  } as const;
 
   public async getAllInvoices(): Promise<InvoiceType[]> {
     const query = {
@@ -138,6 +149,79 @@ export class InvoicesService {
       }
 
       throw e;
+    }
+  }
+
+  public async updateInvoice(
+    id: number,
+    changes: UpdateInvoiceDto,
+  ): Promise<InvoiceType> {
+    const assignments: string[] = [];
+    const values: Array<string | number | null> = [];
+
+    type InvoiceUpdateKey = keyof typeof this.INVOICE_COLUMNS;
+
+    const keys = Object.keys(this.INVOICE_COLUMNS) as InvoiceUpdateKey[];
+
+    for (const key of keys) {
+      const value = changes[key];
+
+      if (value === undefined) continue;
+
+      values.push(value);
+
+      assignments.push(`${this.INVOICE_COLUMNS[key]} = $${values.length}`);
+    }
+
+    if (assignments.length === 0) {
+      throw new BadRequestException('No changes provided.');
+    }
+
+    values.push(id);
+    const idPlaceholder = `$${values.length}`;
+
+    const query = {
+      text: `
+        UPDATE invoices
+        SET ${assignments.join(', ')}
+        WHERE id = ${idPlaceholder}
+        RETURNING
+          id,
+          organization_id AS "organizationId",
+          amount,
+          currency,
+          status,
+          issued_on::text AS "issuedOn",
+          due_on::text AS "dueOn",
+          paid_at AS "paidAt",
+          created_at AS "createdAt"
+      `,
+      values: values,
+    };
+
+    try {
+      const result = await this.pool.query<InvoiceType>(query);
+      const invoice = result.rows[0];
+
+      if (!invoice) {
+        throw new NotFoundException(`Invoice ${id} not found`);
+      }
+
+      return invoice;
+    } catch (error: unknown) {
+      if (isPostgresError(error)) {
+        if (error.code === '23503') {
+          throw new NotFoundException('Referenced organization not found.');
+        }
+
+        if (error.code === '23514') {
+          throw new BadRequestException(
+            'Invoice dates, status, payment details, or amount are inconsistent.',
+          );
+        }
+      }
+
+      throw error;
     }
   }
 }

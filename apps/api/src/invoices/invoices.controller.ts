@@ -4,11 +4,13 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import type { InvoiceType } from './types/invoiceType';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 
 @Controller('invoices')
 export class InvoicesController {
@@ -27,5 +29,13 @@ export class InvoicesController {
   @Post()
   createInvoice(@Body() body: CreateInvoiceDto): Promise<InvoiceType> {
     return this.invoiceService.createInvoice(body);
+  }
+
+  @Patch(':id')
+  updateInvoice(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() changes: UpdateInvoiceDto,
+  ) {
+    return this.invoiceService.updateInvoice(id, changes);
   }
 }
