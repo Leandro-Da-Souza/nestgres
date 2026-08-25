@@ -12,6 +12,7 @@ import { Pool, QueryResultRow } from 'pg';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { DeletedOrganizationRow } from './types/deletedOrganizationRow';
+import { isPostgresError } from '../database/utils/is-postgres-error';
 
 @Injectable()
 export class OrganizationsService {
@@ -165,15 +166,12 @@ export class OrganizationsService {
         throw new NotFoundException(`Organization ${id} not found.`);
       }
     } catch (error: unknown) {
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        error.code === '23503'
-      ) {
-        throw new ConflictException(
-          `Organization ${id} cannot be deleted because it has related records.`,
-        );
+      if (isPostgresError(error)) {
+        if (error.code === '23503') {
+          throw new ConflictException(
+            `Organization ${id} cannot be deleted because it has related records.`,
+          );
+        }
       }
 
       throw error;
