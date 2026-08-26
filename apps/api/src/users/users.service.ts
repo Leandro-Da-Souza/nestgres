@@ -151,4 +151,22 @@ export class UsersService {
       handleUserWriteError(e);
     }
   }
+
+  public async deleteUser(id: number): Promise<void> {
+    const query = {
+      text: `
+        DELETE FROM users
+        WHERE id = $1
+        RETURNING id
+      `,
+      values: [id],
+    };
+
+    const result = await this.pool.query<{ id: number }>(query);
+    const deletedUser = result.rows[0];
+
+    if (!deletedUser) {
+      throw new NotFoundException(`User ${id} not found.`);
+    }
+  }
 }
