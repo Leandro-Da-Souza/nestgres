@@ -1,7 +1,15 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
 import { UserType } from './types/userType';
+import { CreateUserDto } from './dto/create-user.dto';
+import { isPostgresError } from '../database/utils/is-postgres-error';
 
 @Injectable()
 export class UsersService {
@@ -63,5 +71,44 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  public async createUser(body: CreateUserDto) {
+    const { organizationId, email, displayName, role } = body;
+
+    const query = {
+      text: `
+        INSERT INTO users (organization_id, email, display_name, role) 
+        VALUES ($1, $2, $3, $4)
+        RETURNING ${this.USER_PROJECTION}
+      `,
+      values: [organizationId ?? null, email, displayName, role],
+    };
+
+    try {
+      const result = await this.pool.query<UserType>(query);
+      const newUser = result.rows[0];
+
+      if (!newUser) {
+        throw new InternalServerErrorException(
+          'User was created but not returned',
+        );
+      }
+      return newUser;
+    } catch (e: unknown) {
+      if (isPostgresError(e)) {
+        if (e.code === '23505') {
+          throw new ConflictException(`Unique value already exists.`);
+        }
+
+        if (e.code === '23503') {
+          throw new NotFoundException(
+            `Organization ${organizationId} does not exist.`,
+          );
+        }
+      }
+
+      throw e;
+    }
   }
 }
