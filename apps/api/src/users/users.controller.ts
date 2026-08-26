@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserType } from './types/userType';
 
@@ -9,5 +9,10 @@ export class UsersController {
   @Get()
   getUsers(): Promise<UserType[]> {
     return this.userService.getAllUsers();
+  }
+
+  @Get(':id')
+  getUser(@Param('id', ParseIntPipe) id: number): Promise<UserType> {
+    return this.userService.getUserById(id);
   }
 }

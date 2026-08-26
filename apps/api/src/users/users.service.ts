@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
 import { UserType } from './types/userType';
@@ -43,5 +43,25 @@ export class UsersService {
 
     const result = await this.pool.query<UserType>(query);
     return result.rows;
+  }
+
+  public async getUserById(id: number): Promise<UserType> {
+    const query = {
+      text: `
+        SELECT ${this.USER_PROJECTION}
+        FROM users
+        WHERE id = $1
+      `,
+      values: [id],
+    };
+
+    const result = await this.pool.query<UserType>(query);
+    const user = result.rows[0];
+
+    if (!user) {
+      throw new NotFoundException(`User ${id} could not be found.`);
+    }
+
+    return user;
   }
 }
