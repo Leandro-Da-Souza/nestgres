@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Inject, Module, OnApplicationShutdown } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool } from 'pg';
 import { PG_POOL } from './database.constants';
@@ -21,4 +21,10 @@ import { PG_POOL } from './database.constants';
   ],
   exports: [PG_POOL],
 })
-export class DatabaseModule {}
+export class DatabaseModule implements OnApplicationShutdown {
+  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+
+  async onApplicationShutdown(): Promise<void> {
+    await this.pool.end();
+  }
+}
