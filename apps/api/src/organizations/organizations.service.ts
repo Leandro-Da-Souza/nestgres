@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import type { OrganizationType } from './types/organizationType';
 import { PG_POOL } from '../database/database.constants';
-import { Pool, QueryResultRow } from 'pg';
+import { Pool } from 'pg';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { DeletedOrganizationRow } from './types/deletedOrganizationRow';
