@@ -1,10 +1,10 @@
 import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException,
   BadRequestException,
   ConflictException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import type { OrganizationType } from './types/organizationType';
 import { PG_POOL } from '../database/database.constants';
@@ -13,6 +13,7 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { DeletedOrganizationRow } from './types/deletedOrganizationRow';
 import { isPostgresError } from '../database/utils/is-postgres-error';
+import { OrganizationUserType } from './types/organizationUsers';
 
 @Injectable()
 export class OrganizationsService {
@@ -35,7 +36,7 @@ export class OrganizationsService {
     countryCode: 'country_code',
   } as const satisfies Record<keyof UpdateOrganizationDto, string>;
 
-  public async fetchOrganizations(): Promise<OrganizationType[]> {
+  public async getOrganizations(): Promise<OrganizationType[]> {
     const query = {
       text: `
       SELECT ${this.ORG_PROJECTION}
@@ -47,7 +48,7 @@ export class OrganizationsService {
     return res.rows;
   }
 
-  public async fetchOrganizationById(id: number): Promise<OrganizationType> {
+  public async getOrganizationById(id: number): Promise<OrganizationType> {
     const query = {
       text: `
         SELECT ${this.ORG_PROJECTION}
@@ -170,5 +171,29 @@ export class OrganizationsService {
 
       throw error;
     }
+  }
+
+  public async getOrganizationUsers(
+    id: number,
+  ): Promise<OrganizationUserType[]> {
+    const query = {
+      text: `
+        SELECT 
+          u.id AS "userId", 
+          u.display_name AS "displayName", 
+          u.role, 
+          u.email, 
+          o.id AS "organizationId", 
+          o.name AS "organizationName"
+        FROM organizations AS o 
+        INNER JOIN users AS u ON o.id = u.organization_id
+        WHERE o.id = $1
+        ORDER BY u.display_name ASC 
+      `,
+      values: [id],
+    };
+
+    const result = await this.pool.query<OrganizationUserType>(query);
+    return result.rows;
   }
 }

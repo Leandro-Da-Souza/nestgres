@@ -14,20 +14,22 @@ import type { OrganizationType } from './types/organizationType';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { UserType } from '../users/types/userType';
+import { OrganizationUserType } from './types/organizationUsers';
 
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
   @Get()
   getOrganizations(): Promise<OrganizationType[]> {
-    return this.organizationsService.fetchOrganizations();
+    return this.organizationsService.getOrganizations();
   }
 
   @Get(':id')
   getOrganizationById(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<OrganizationType> {
-    return this.organizationsService.fetchOrganizationById(id);
+    return this.organizationsService.getOrganizationById(id);
   }
 
   @Post()
@@ -49,5 +51,12 @@ export class OrganizationsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteOrganization(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.organizationsService.deleteOrganization(id);
+  }
+
+  @Get(':id/users')
+  getOrganizationUsers(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<OrganizationUserType[]> {
+    return this.organizationsService.getOrganizationUsers(id);
   }
 }
