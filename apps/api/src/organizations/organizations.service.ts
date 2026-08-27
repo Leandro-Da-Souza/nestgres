@@ -21,15 +21,24 @@ export class OrganizationsService {
     private readonly pool: Pool,
   ) {}
 
-  public async fetchOrganizations(): Promise<OrganizationType[]> {
-    const query = {
-      text: `
-      SELECT
+  private readonly ORG_PROJECTION = `
         id,
         name,
         plan,
         country_code AS "countryCode",
         created_at AS "createdAt"
+  `;
+
+  private ORG_UPDATE_COLUMNS = {
+    name: 'name',
+    plan: 'plan',
+    countryCode: 'country_code',
+  } as const satisfies Record<keyof UpdateOrganizationDto, string>;
+
+  public async fetchOrganizations(): Promise<OrganizationType[]> {
+    const query = {
+      text: `
+      SELECT ${this.ORG_PROJECTION}
       FROM organizations
     `,
     };
@@ -41,12 +50,7 @@ export class OrganizationsService {
   public async fetchOrganizationById(id: number): Promise<OrganizationType> {
     const query = {
       text: `
-        SELECT
-          id,
-          name,
-          plan,
-          country_code AS "countryCode",
-          created_at AS "createdAt"
+        SELECT ${this.ORG_PROJECTION}
         FROM organizations
         WHERE id = $1
       `,
@@ -72,12 +76,7 @@ export class OrganizationsService {
       text: `
         INSERT INTO organizations (name, plan, country_code)
         VALUES ($1, $2, $3)
-        RETURNING 
-          id, 
-          name, 
-          plan, 
-          country_code AS "countryCode", 
-          created_at AS "createdAt"
+        RETURNING ${this.ORG_PROJECTION}
       `,
       values: [name, plan, countryCode],
     };
@@ -101,19 +100,19 @@ export class OrganizationsService {
     const assignments: string[] = [];
     const values: Array<string | number> = [];
 
-    if (changes.name !== undefined) {
-      values.push(changes.name);
-      assignments.push(`name = $${values.length}`);
-    }
+    type OrganizationUpdateKey = keyof typeof this.ORG_UPDATE_COLUMNS;
 
-    if (changes.plan !== undefined) {
-      values.push(changes.plan);
-      assignments.push(`plan = $${values.length}`);
-    }
+    const keys = Object.keys(
+      this.ORG_UPDATE_COLUMNS,
+    ) as OrganizationUpdateKey[];
 
-    if (changes.countryCode !== undefined) {
-      values.push(changes.countryCode);
-      assignments.push(`country_code = $${values.length}`);
+    for (const key of keys) {
+      const value = changes[key];
+
+      if (value === undefined) continue;
+
+      values.push(value);
+      assignments.push(`${this.ORG_UPDATE_COLUMNS[key]} = $${values.length}`);
     }
 
     if (assignments.length === 0) {
@@ -128,12 +127,7 @@ export class OrganizationsService {
         UPDATE organizations
         SET ${assignments.join(', ')}
         WHERE id = ${idPlaceholder}
-        RETURNING
-            id,
-            name,
-            plan,
-            country_code AS "countryCode",
-            created_at AS "createdAt"
+        RETURNING ${this.ORG_PROJECTION}
       `,
       values: values,
     };
