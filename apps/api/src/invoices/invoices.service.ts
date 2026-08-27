@@ -9,8 +9,8 @@ import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
 import type { InvoiceType } from './types/invoiceType';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
-import { isPostgresError } from '../database/utils/is-postgres-error';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
+import { handleInvoiceWriteError } from './utils/handle-invoice-write-error';
 
 @Injectable()
 export class InvoicesService {
@@ -19,7 +19,7 @@ export class InvoicesService {
     private readonly pool: Pool,
   ) {}
 
-  INVOICE_COLUMNS = {
+  private INVOICE_UPDATE_COLUMNS = {
     organizationId: 'organization_id',
     amount: 'amount',
     currency: 'currency',
@@ -27,21 +27,24 @@ export class InvoicesService {
     issuedOn: 'issued_on',
     dueOn: 'due_on',
     paidAt: 'paid_at',
-  } as const;
+  } as const satisfies Record<keyof UpdateInvoiceDto, string>;
+
+  private readonly INVOICE_PROJECTION = `
+    id,
+    organization_id AS "organizationId",
+    amount,
+    currency,
+    status,
+    issued_on AS "issuedOn",
+    due_on AS "dueOn",
+    paid_at AS "paidAt",
+    created_at AS "createdAt"
+  `;
 
   public async getAllInvoices(): Promise<InvoiceType[]> {
     const query = {
       text: `
-        SELECT
-          id,
-          organization_id AS "organizationId",
-          amount,
-          currency,
-          status,
-          issued_on AS "issuedOn",
-          due_on AS "dueOn",
-          paid_at AS "paidAt",
-          created_at AS "createdAt"
+        SELECT ${this.INVOICE_PROJECTION}
         FROM invoices
         ORDER BY id
       `,
@@ -54,16 +57,7 @@ export class InvoicesService {
   public async getInvoiceById(id: number): Promise<InvoiceType> {
     const query = {
       text: `
-        SELECT
-          id,
-          organization_id AS "organizationId",
-          amount,
-          currency,
-          status,
-          issued_on AS "issuedOn",
-          due_on AS "dueOn",
-          paid_at AS "paidAt",
-          created_at AS "createdAt"
+        SELECT ${this.INVOICE_PROJECTION}
         FROM invoices
         WHERE id = $1
       `,
@@ -102,16 +96,7 @@ export class InvoicesService {
           due_on, 
           paid_at
         ) values ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING
-          id,
-          organization_id AS "organizationId",
-          amount,
-          currency,
-          status,
-          issued_on::text AS "issuedOn",
-          due_on::text AS "dueOn",
-          paid_at AS "paidAt",
-          created_at AS "createdAt"
+        RETURNING ${this.INVOICE_PROJECTION}
       `,
       values: [
         organizationId,
@@ -136,19 +121,7 @@ export class InvoicesService {
 
       return invoice;
     } catch (e: unknown) {
-      if (isPostgresError(e)) {
-        if (e.code === '23503') {
-          throw new NotFoundException(`${organizationId} not found.`);
-        }
-
-        if (e.code === '23514') {
-          throw new BadRequestException(
-            'Invoice dates, status, or payment date are inconsistent.',
-          );
-        }
-      }
-
-      throw e;
+      handleInvoiceWriteError(e);
     }
   }
 
@@ -159,9 +132,9 @@ export class InvoicesService {
     const assignments: string[] = [];
     const values: Array<string | number | null> = [];
 
-    type InvoiceUpdateKey = keyof typeof this.INVOICE_COLUMNS;
+    type InvoiceUpdateKey = keyof typeof this.INVOICE_UPDATE_COLUMNS;
 
-    const keys = Object.keys(this.INVOICE_COLUMNS) as InvoiceUpdateKey[];
+    const keys = Object.keys(this.INVOICE_UPDATE_COLUMNS) as InvoiceUpdateKey[];
 
     for (const key of keys) {
       const value = changes[key];
@@ -170,7 +143,9 @@ export class InvoicesService {
 
       values.push(value);
 
-      assignments.push(`${this.INVOICE_COLUMNS[key]} = $${values.length}`);
+      assignments.push(
+        `${this.INVOICE_UPDATE_COLUMNS[key]} = $${values.length}`,
+      );
     }
 
     if (assignments.length === 0) {
@@ -185,16 +160,7 @@ export class InvoicesService {
         UPDATE invoices
         SET ${assignments.join(', ')}
         WHERE id = ${idPlaceholder}
-        RETURNING
-          id,
-          organization_id AS "organizationId",
-          amount,
-          currency,
-          status,
-          issued_on::text AS "issuedOn",
-          due_on::text AS "dueOn",
-          paid_at AS "paidAt",
-          created_at AS "createdAt"
+        RETURNING ${this.INVOICE_PROJECTION}
       `,
       values: values,
     };
@@ -209,19 +175,7 @@ export class InvoicesService {
 
       return invoice;
     } catch (error: unknown) {
-      if (isPostgresError(error)) {
-        if (error.code === '23503') {
-          throw new NotFoundException('Referenced organization not found.');
-        }
-
-        if (error.code === '23514') {
-          throw new BadRequestException(
-            'Invoice dates, status, payment details, or amount are inconsistent.',
-          );
-        }
-      }
-
-      throw error;
+      handleInvoiceWriteError(error);
     }
   }
 

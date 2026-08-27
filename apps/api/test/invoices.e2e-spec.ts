@@ -51,8 +51,8 @@ describe('Invoices (e2e)', () => {
       amount: '125.50',
       currency: 'SEK',
       status: 'open',
-      issuedOn: '2026-01-01',
-      dueOn: '2026-01-31',
+      issuedOn: '2025-12-31T23:00:00.000Z',
+      dueOn: '2026-01-30T23:00:00.000Z',
       paidAt: null,
     });
 
