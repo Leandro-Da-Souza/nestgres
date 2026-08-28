@@ -272,4 +272,44 @@ export class OrganizationsService {
 
     return summary;
   }
+
+  public async getOrganizationSummaries(): Promise<OrganizationSummaryType[]> {
+    const query = {
+      text: `
+        SELECT 
+          o.id AS "organizationId",
+          o.name AS "organizationName",
+          COALESCE(us.number_of_users, 0)::int AS "numberOfUsers",
+          COALESCE(ins.number_of_invoices, 0)::int AS "numberOfInvoices",
+          COALESCE(ins.total_invoice_amount, 0) as "totalInvoiceAmount",
+          COALESCE(ins.outstanding_amount, 0) AS "outstandingAmount"
+        FROM organizations AS o
+        LEFT JOIN (
+          SELECT
+            organization_id,
+            count(*) AS "number_of_users"
+          FROM users
+          GROUP BY organization_id
+        ) AS us
+          ON us.organization_id = o.id  
+        LEFT JOIN (
+          SELECT 
+            organization_id,
+            count(*) AS "number_of_invoices",
+            SUM(amount) AS "total_invoice_amount",
+            SUM(amount) FILTER ( WHERE status IN ('open', 'overdue') )
+                AS "outstanding_amount"
+          FROM invoices
+          GROUP BY organization_id
+        ) AS ins
+          ON ins.organization_id = o.id
+        ORDER BY o.id
+      `,
+    };
+
+    const result = await this.pool.query<OrganizationSummaryType>(query);
+    const summary = result.rows;
+
+    return summary;
+  }
 }

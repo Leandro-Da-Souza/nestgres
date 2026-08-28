@@ -196,4 +196,19 @@ export class InvoicesService {
       throw new NotFoundException(`Invoice ${id} not found`);
     }
   }
+
+  public async getRecentInvoices(limit: number = 5): Promise<InvoiceType[]> {
+    const query = {
+      text: `
+        SELECT ${this.INVOICE_PROJECTION}
+        FROM invoices
+        ORDER BY issued_on DESC, id DESC
+        LIMIT $1
+      `,
+      values: [limit],
+    };
+
+    const result = await this.pool.query<InvoiceType>(query);
+    return result.rows;
+  }
 }
