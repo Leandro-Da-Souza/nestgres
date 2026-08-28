@@ -15,7 +15,9 @@ import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { UserType } from '../users/types/userType';
-import { OrganizationUserType } from './types/organizationUsers';
+import { OrganizationUserType } from './types/organizationUserType';
+import { OrganizationInvoiceType } from './types/organizationInvoiceType';
+import { OrganizationSummaryType } from './types/organizationSummaryType';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -58,5 +60,19 @@ export class OrganizationsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<OrganizationUserType[]> {
     return this.organizationsService.getOrganizationUsers(id);
+  }
+
+  @Get(':id/invoices')
+  getOrganizationInvoices(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<OrganizationInvoiceType[]> {
+    return this.organizationsService.getOrganizationInvoices(id);
+  }
+
+  @Get(':id/summary')
+  getOrganizationSummary(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<OrganizationSummaryType> {
+    return this.organizationsService.getOrganizationSummary(id);
   }
 }
