@@ -33,7 +33,7 @@ describe('Invoices (e2e)', () => {
       .post('/organizations')
       .send({ name: organizationName, plan: 'free', countryCode: 'SE' })
       .expect(201);
-    organizationId = organization.body.id as number;
+    organizationId = organization.body.data.id as number;
 
     const created = await request(app.getHttpServer())
       .post('/invoices')
@@ -47,23 +47,31 @@ describe('Invoices (e2e)', () => {
       })
       .expect(201);
 
-    invoiceId = created.body.id as number;
+    invoiceId = created.body.data.id as number;
     expect(created.body).toMatchObject({
-      id: invoiceId,
-      organizationId,
-      amount: '125.50',
-      currency: 'SEK',
-      status: 'open',
-      issuedOn: '2025-12-31T23:00:00.000Z',
-      dueOn: '2026-01-30T23:00:00.000Z',
-      paidAt: null,
+      data: {
+        id: invoiceId,
+        organizationId,
+        amount: '125.50',
+        currency: 'SEK',
+        status: 'open',
+        issuedOn: '2025-12-31T23:00:00.000Z',
+        dueOn: '2026-01-30T23:00:00.000Z',
+        paidAt: null,
+      },
+      meta: {
+        timestamp: expect.any(String),
+        durationMs: expect.any(Number),
+        path: '/invoices',
+        method: 'POST',
+      },
     });
 
     await request(app.getHttpServer())
       .get(`/invoices/${invoiceId}`)
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toMatchObject({ id: invoiceId, organizationId });
+        expect(body.data).toMatchObject({ id: invoiceId, organizationId });
       });
 
     await request(app.getHttpServer())
@@ -71,7 +79,7 @@ describe('Invoices (e2e)', () => {
       .send({ status: 'paid', paidAt: '2026-01-15T12:00:00.000Z' })
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toMatchObject({
+        expect(body.data).toMatchObject({
           id: invoiceId,
           status: 'paid',
           paidAt: '2026-01-15T12:00:00.000Z',
@@ -82,7 +90,7 @@ describe('Invoices (e2e)', () => {
       .get('/invoices')
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toEqual(
+        expect(body.data).toEqual(
           expect.arrayContaining([expect.objectContaining({ id: invoiceId })]),
         );
       });
@@ -93,7 +101,7 @@ describe('Invoices (e2e)', () => {
     invoiceId = undefined;
 
     await request(app.getHttpServer())
-      .get(`/invoices/${created.body.id as number}`)
+      .get(`/invoices/${created.body.data.id as number}`)
       .expect(404);
   });
 });

@@ -38,19 +38,27 @@ describe('Organizations (e2e)', () => {
       .send({ name, plan: 'free', countryCode: 'SE' })
       .expect(201);
 
-    organizationId = created.body.id as number;
+    organizationId = created.body.data.id as number;
     expect(created.body).toMatchObject({
-      id: organizationId,
-      name,
-      plan: 'free',
-      countryCode: 'SE',
+      data: {
+        id: organizationId,
+        name,
+        plan: 'free',
+        countryCode: 'SE',
+      },
+      meta: {
+        timestamp: expect.any(String),
+        durationMs: expect.any(Number),
+        path: '/organizations',
+        method: 'POST',
+      },
     });
 
     await request(app.getHttpServer())
       .get(`/organizations/${organizationId}`)
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toMatchObject({ id: organizationId, name });
+        expect(body.data).toMatchObject({ id: organizationId, name });
       });
 
     await request(app.getHttpServer())
@@ -58,14 +66,14 @@ describe('Organizations (e2e)', () => {
       .send({ plan: 'pro' })
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toMatchObject({ id: organizationId, plan: 'pro' });
+        expect(body.data).toMatchObject({ id: organizationId, plan: 'pro' });
       });
 
     await request(app.getHttpServer())
       .get('/organizations')
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toEqual(
+        expect(body.data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({ id: organizationId }),
           ]),
@@ -81,7 +89,7 @@ describe('Organizations (e2e)', () => {
         role: 'admin',
       })
       .expect(201);
-    userId = user.body.id as number;
+    userId = user.body.data.id as number;
 
     const invoice = await request(app.getHttpServer())
       .post('/invoices')
@@ -94,13 +102,13 @@ describe('Organizations (e2e)', () => {
         dueOn: '2026-02-28',
       })
       .expect(201);
-    invoiceId = invoice.body.id as number;
+    invoiceId = invoice.body.data.id as number;
 
     await request(app.getHttpServer())
       .get(`/organizations/${organizationId}/users`)
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toEqual(
+        expect(body.data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               userId,
@@ -117,7 +125,7 @@ describe('Organizations (e2e)', () => {
       .get(`/organizations/${organizationId}/invoices`)
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toEqual(
+        expect(body.data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               invoiceId,
@@ -135,7 +143,7 @@ describe('Organizations (e2e)', () => {
       .get(`/organizations/${organizationId}/summary`)
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toMatchObject({
+        expect(body.data).toMatchObject({
           organizationId,
           organizationName: name,
           numberOfUsers: 1,
@@ -157,7 +165,7 @@ describe('Organizations (e2e)', () => {
     organizationId = undefined;
 
     await request(app.getHttpServer())
-      .get(`/organizations/${created.body.id as number}`)
+      .get(`/organizations/${created.body.data.id as number}`)
       .expect(404);
   });
 });

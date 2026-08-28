@@ -33,20 +33,28 @@ describe('Users (e2e)', () => {
       })
       .expect(201);
 
-    userId = created.body.id as number;
+    userId = created.body.data.id as number;
     expect(created.body).toMatchObject({
-      id: userId,
-      organizationId: null,
-      email,
-      displayName: 'E2E User',
-      role: 'member',
+      data: {
+        id: userId,
+        organizationId: null,
+        email,
+        displayName: 'E2E User',
+        role: 'member',
+      },
+      meta: {
+        timestamp: expect.any(String),
+        durationMs: expect.any(Number),
+        path: '/users',
+        method: 'POST',
+      },
     });
 
     await request(app.getHttpServer())
       .get(`/users/${userId}`)
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toMatchObject({ id: userId, email });
+        expect(body.data).toMatchObject({ id: userId, email });
       });
 
     await request(app.getHttpServer())
@@ -54,7 +62,7 @@ describe('Users (e2e)', () => {
       .send({ displayName: 'Updated E2E User', active: false })
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toMatchObject({
+        expect(body.data).toMatchObject({
           id: userId,
           displayName: 'Updated E2E User',
           active: false,
@@ -65,7 +73,7 @@ describe('Users (e2e)', () => {
       .get('/users')
       .expect(200)
       .expect(({ body }) => {
-        expect(body).toEqual(
+        expect(body.data).toEqual(
           expect.arrayContaining([expect.objectContaining({ id: userId })]),
         );
       });
@@ -74,7 +82,7 @@ describe('Users (e2e)', () => {
     userId = undefined;
 
     await request(app.getHttpServer())
-      .get(`/users/${created.body.id as number}`)
+      .get(`/users/${created.body.data.id as number}`)
       .expect(404);
   });
 });

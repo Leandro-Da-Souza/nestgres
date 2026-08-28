@@ -37,7 +37,7 @@ describe('Dashboard (e2e)', () => {
       .post('/organizations')
       .send({ name, plan: 'pro', countryCode: 'SE' })
       .expect(201);
-    organizationId = organization.body.id as number;
+    organizationId = organization.body.data.id as number;
 
     const user = await request(app.getHttpServer())
       .post('/users')
@@ -48,7 +48,7 @@ describe('Dashboard (e2e)', () => {
         role: 'member',
       })
       .expect(201);
-    userId = user.body.id as number;
+    userId = user.body.data.id as number;
 
     const invoice = await request(app.getHttpServer())
       .post('/invoices')
@@ -61,13 +61,21 @@ describe('Dashboard (e2e)', () => {
         dueOn: '2100-01-31',
       })
       .expect(201);
-    invoiceId = invoice.body.id as number;
+    invoiceId = invoice.body.data.id as number;
 
     await request(app.getHttpServer())
       .get('/dashboard')
       .expect(200)
       .expect(({ body }) => {
-        expect(body.totals).toEqual(
+        expect(body.meta).toEqual(
+          expect.objectContaining({
+            timestamp: expect.any(String),
+            durationMs: expect.any(Number),
+            path: '/dashboard',
+            method: 'GET',
+          }),
+        );
+        expect(body.data.totals).toEqual(
           expect.objectContaining({
             organizations: expect.any(Number),
             invoices: expect.any(Number),
@@ -76,11 +84,11 @@ describe('Dashboard (e2e)', () => {
             outstandingAmount: expect.any(String),
           }),
         );
-        expect(body.totals.organizations).toBeGreaterThanOrEqual(1);
-        expect(body.totals.invoices).toBeGreaterThanOrEqual(1);
-        expect(body.totals.activeUsers).toBeGreaterThanOrEqual(1);
+        expect(body.data.totals.organizations).toBeGreaterThanOrEqual(1);
+        expect(body.data.totals.invoices).toBeGreaterThanOrEqual(1);
+        expect(body.data.totals.activeUsers).toBeGreaterThanOrEqual(1);
 
-        expect(body.organizations).toEqual(
+        expect(body.data.organizations).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               organizationId,
@@ -93,7 +101,7 @@ describe('Dashboard (e2e)', () => {
           ]),
         );
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        expect(body.recentInvoices).toEqual(
+        expect(body.data.recentInvoices).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               id: invoiceId,

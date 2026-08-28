@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
+import { MetaResponseInterceptor } from '../src/common/interceptors/meta-response.interceptor';
 
 export async function createE2eApp(): Promise<INestApplication<App>> {
   const moduleFixture = await Test.createTestingModule({
@@ -16,6 +17,7 @@ export async function createE2eApp(): Promise<INestApplication<App>> {
       transform: true,
     }),
   );
+  app.useGlobalInterceptors(new MetaResponseInterceptor());
   await app.init();
 
   return app;
