@@ -1,0 +1,109 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { App } from 'supertest/types';
+import { createE2eApp } from './create-e2e-app';
+
+describe('Dashboard (e2e)', () => {
+  let app: INestApplication<App>;
+  let organizationId: number | undefined;
+  let userId: number | undefined;
+  let invoiceId: number | undefined;
+  const name = `e2e-dashboard-organization-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  beforeAll(async () => {
+    app = await createE2eApp();
+  });
+
+  afterAll(async () => {
+    if (invoiceId !== undefined) {
+      await request(app.getHttpServer()).delete(`/invoices/${invoiceId}`);
+    }
+    if (userId !== undefined) {
+      await request(app.getHttpServer()).delete(`/users/${userId}`);
+    }
+    if (organizationId !== undefined) {
+      await request(app.getHttpServer()).delete(
+        `/organizations/${organizationId}`,
+      );
+    }
+    await app.close();
+  });
+
+  it('returns aggregate totals, organization summaries, and recent invoices', async () => {
+    const organization = await request(app.getHttpServer())
+      .post('/organizations')
+      .send({ name, plan: 'pro', countryCode: 'SE' })
+      .expect(201);
+    organizationId = organization.body.id as number;
+
+    const user = await request(app.getHttpServer())
+      .post('/users')
+      .send({
+        organizationId,
+        email: `e2e-dashboard-user-${Date.now()}@example.test`,
+        displayName: 'Dashboard E2E User',
+        role: 'member',
+      })
+      .expect(201);
+    userId = user.body.id as number;
+
+    const invoice = await request(app.getHttpServer())
+      .post('/invoices')
+      .send({
+        organizationId,
+        amount: 225.75,
+        currency: 'SEK',
+        status: 'overdue',
+        issuedOn: '2099-12-31',
+        dueOn: '2100-01-31',
+      })
+      .expect(201);
+    invoiceId = invoice.body.id as number;
+
+    await request(app.getHttpServer())
+      .get('/dashboard')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.totals).toEqual(
+          expect.objectContaining({
+            organizations: expect.any(Number),
+            invoices: expect.any(Number),
+            activeUsers: expect.any(Number),
+            totalInvoiceAmount: expect.any(String),
+            outstandingAmount: expect.any(String),
+          }),
+        );
+        expect(body.totals.organizations).toBeGreaterThanOrEqual(1);
+        expect(body.totals.invoices).toBeGreaterThanOrEqual(1);
+        expect(body.totals.activeUsers).toBeGreaterThanOrEqual(1);
+
+        expect(body.organizations).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              organizationId,
+              organizationName: name,
+              numberOfUsers: 1,
+              numberOfInvoices: 1,
+              totalInvoiceAmount: '225.75',
+              outstandingAmount: '225.75',
+            }),
+          ]),
+        );
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        expect(body.recentInvoices).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: invoiceId,
+              organizationId,
+              amount: '225.75',
+              currency: 'SEK',
+              status: 'overdue',
+            }),
+          ]),
+        );
+      });
+  });
+});
