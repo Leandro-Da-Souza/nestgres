@@ -1,4 +1,4 @@
-export const USER_ROLES = ['member', 'admin'] as const;
+export const USER_ROLES = ['member', 'admin', 'super_admin'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export type UserType = {
@@ -10,4 +10,11 @@ export type UserType = {
   active: boolean;
   lastLoginAt: Date | null;
   createdAt: Date;
+};
+
+export type AuthenticationUserType = Pick<
+  UserType,
+  'id' | 'organizationId' | 'email' | 'role' | 'displayName' | 'active'
+> & {
+  passwordHash: string | null;
 };

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
-import { UserType } from './types/userType';
+import { AuthenticationUserType, UserType } from './types/userType';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { handleUserWriteError } from './utils/handle-user-write-error';
@@ -168,5 +168,28 @@ export class UsersService {
     if (!deletedUser) {
       throw new NotFoundException(`User ${id} not found.`);
     }
+  }
+
+  public async findUserForAuthentication(
+    email: string,
+  ): Promise<AuthenticationUserType | null> {
+    const query = {
+      text: `
+        SELECT 
+          id,
+          organization_id AS "organizationId",
+          email,
+          display_name AS "displayName",
+          role,
+          active,
+          password_hash AS "passwordHash"
+        FROM users
+        WHERE email = $1
+      `,
+      values: [email],
+    };
+
+    const result = await this.pool.query<AuthenticationUserType>(query);
+    return result.rows[0] ?? null;
   }
 }
