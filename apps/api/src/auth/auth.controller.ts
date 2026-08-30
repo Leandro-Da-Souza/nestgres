@@ -5,13 +5,12 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  UseGuards,
   Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { AuthGuard } from './auth.guard';
 import { type AuthenticatedRequestType } from '../common/types/shared.types';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -23,7 +22,7 @@ export class AuthController {
     return this.authService.authenticate(data);
   }
 
-  @UseGuards(AuthGuard)
+  @Public()
   @Get('profile')
   getProfile(@Request() req: AuthenticatedRequestType) {
     return req.user;

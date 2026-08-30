@@ -18,6 +18,7 @@ import { UserType } from '../users/types/userType';
 import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
 import { OrganizationSummaryType } from './types/organizationSummaryType';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller('organizations')
 export class OrganizationsController {
