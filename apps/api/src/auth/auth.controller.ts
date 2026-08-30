@@ -16,13 +16,13 @@ import { Public } from '../common/decorators/public.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
   login(@Body() data: LoginDto) {
     return this.authService.authenticate(data);
   }
 
-  @Public()
   @Get('profile')
   getProfile(@Request() req: AuthenticatedRequestType) {
     return req.user;

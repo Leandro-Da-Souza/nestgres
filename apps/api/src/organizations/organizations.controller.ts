@@ -14,11 +14,9 @@ import type { OrganizationType } from './types/organizationType';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { UserType } from '../users/types/userType';
 import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
 import { OrganizationSummaryType } from './types/organizationSummaryType';
-import { Public } from '../common/decorators/public.decorator';
 
 @Controller('organizations')
 export class OrganizationsController {
