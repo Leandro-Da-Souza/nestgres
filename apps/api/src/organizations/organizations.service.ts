@@ -5,6 +5,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { OrganizationType } from './types/organizationType';
 import { PG_POOL } from '../database/database.constants';
@@ -16,6 +17,7 @@ import { isPostgresError } from '../database/utils/is-postgres-error';
 import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
 import { OrganizationSummaryType } from './types/organizationSummaryType';
+import { JwtPayloadType } from '../common/types/shared.types';
 
 @Injectable()
 export class OrganizationsService {
@@ -228,7 +230,14 @@ export class OrganizationsService {
 
   public async getOrganizationSummary(
     id: number,
+    user: JwtPayloadType,
   ): Promise<OrganizationSummaryType> {
+    const { organizationId, role } = user;
+
+    if (role !== 'super_admin' || id !== organizationId) {
+      throw new UnauthorizedException();
+    }
+
     const query = {
       text: `
         SELECT 

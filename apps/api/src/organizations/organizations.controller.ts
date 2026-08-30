@@ -9,6 +9,7 @@ import {
   Delete,
   HttpStatus,
   HttpCode,
+  Request,
 } from '@nestjs/common';
 import type { OrganizationType } from './types/organizationType';
 import { OrganizationsService } from './organizations.service';
@@ -17,6 +18,8 @@ import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
 import { OrganizationSummaryType } from './types/organizationSummaryType';
+import { type AuthenticatedRequestType } from '../common/types/shared.types';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -68,10 +71,12 @@ export class OrganizationsController {
     return this.organizationsService.getOrganizationInvoices(id);
   }
 
+  @Roles('admin', 'super_admin')
   @Get(':id/summary')
   getOrganizationSummary(
     @Param('id', ParseIntPipe) id: number,
+    @Request() req: AuthenticatedRequestType,
   ): Promise<OrganizationSummaryType> {
-    return this.organizationsService.getOrganizationSummary(id);
+    return this.organizationsService.getOrganizationSummary(id, req.user);
   }
 }

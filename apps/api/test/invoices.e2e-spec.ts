@@ -5,25 +5,30 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { createE2eApp } from './create-e2e-app';
+import { authorizationHeader, createE2eAccessToken } from './e2e-auth';
 
 describe('Invoices (e2e)', () => {
   let app: INestApplication<App>;
+  let accessToken: string;
   let organizationId: number | undefined;
   let invoiceId: number | undefined;
   const organizationName = `e2e-invoice-organization-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   beforeAll(async () => {
     app = await createE2eApp();
+    accessToken = await createE2eAccessToken(app);
   });
 
   afterAll(async () => {
     if (invoiceId !== undefined) {
-      await request(app.getHttpServer()).delete(`/invoices/${invoiceId}`);
+      await request(app.getHttpServer())
+        .delete(`/invoices/${invoiceId}`)
+        .set(authorizationHeader(accessToken));
     }
     if (organizationId !== undefined) {
-      await request(app.getHttpServer()).delete(
-        `/organizations/${organizationId}`,
-      );
+      await request(app.getHttpServer())
+        .delete(`/organizations/${organizationId}`)
+        .set(authorizationHeader(accessToken));
     }
     await app.close();
   });
@@ -31,12 +36,14 @@ describe('Invoices (e2e)', () => {
   it('creates, reads, updates, lists, and deletes an invoice', async () => {
     const organization = await request(app.getHttpServer())
       .post('/organizations')
+      .set(authorizationHeader(accessToken))
       .send({ name: organizationName, plan: 'free', countryCode: 'SE' })
       .expect(201);
     organizationId = organization.body.data.id as number;
 
     const created = await request(app.getHttpServer())
       .post('/invoices')
+      .set(authorizationHeader(accessToken))
       .send({
         organizationId,
         amount: 125.5,
@@ -69,6 +76,7 @@ describe('Invoices (e2e)', () => {
 
     await request(app.getHttpServer())
       .get(`/invoices/${invoiceId}`)
+      .set(authorizationHeader(accessToken))
       .expect(200)
       .expect(({ body }) => {
         expect(body.data).toMatchObject({ id: invoiceId, organizationId });
@@ -76,6 +84,7 @@ describe('Invoices (e2e)', () => {
 
     await request(app.getHttpServer())
       .patch(`/invoices/${invoiceId}`)
+      .set(authorizationHeader(accessToken))
       .send({ status: 'paid', paidAt: '2026-01-15T12:00:00.000Z' })
       .expect(200)
       .expect(({ body }) => {
@@ -88,6 +97,7 @@ describe('Invoices (e2e)', () => {
 
     await request(app.getHttpServer())
       .get('/invoices')
+      .set(authorizationHeader(accessToken))
       .expect(200)
       .expect(({ body }) => {
         expect(body.data).toEqual(
@@ -97,11 +107,13 @@ describe('Invoices (e2e)', () => {
 
     await request(app.getHttpServer())
       .delete(`/invoices/${invoiceId}`)
+      .set(authorizationHeader(accessToken))
       .expect(204);
     invoiceId = undefined;
 
     await request(app.getHttpServer())
       .get(`/invoices/${created.body.data.id as number}`)
+      .set(authorizationHeader(accessToken))
       .expect(404);
   });
 });

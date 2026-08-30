@@ -5,9 +5,11 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { createE2eApp } from './create-e2e-app';
+import { authorizationHeader, createE2eAccessToken } from './e2e-auth';
 
 describe('Dashboard (e2e)', () => {
   let app: INestApplication<App>;
+  let accessToken: string;
   let organizationId: number | undefined;
   let userId: number | undefined;
   let invoiceId: number | undefined;
@@ -15,19 +17,24 @@ describe('Dashboard (e2e)', () => {
 
   beforeAll(async () => {
     app = await createE2eApp();
+    accessToken = await createE2eAccessToken(app);
   });
 
   afterAll(async () => {
     if (invoiceId !== undefined) {
-      await request(app.getHttpServer()).delete(`/invoices/${invoiceId}`);
+      await request(app.getHttpServer())
+        .delete(`/invoices/${invoiceId}`)
+        .set(authorizationHeader(accessToken));
     }
     if (userId !== undefined) {
-      await request(app.getHttpServer()).delete(`/users/${userId}`);
+      await request(app.getHttpServer())
+        .delete(`/users/${userId}`)
+        .set(authorizationHeader(accessToken));
     }
     if (organizationId !== undefined) {
-      await request(app.getHttpServer()).delete(
-        `/organizations/${organizationId}`,
-      );
+      await request(app.getHttpServer())
+        .delete(`/organizations/${organizationId}`)
+        .set(authorizationHeader(accessToken));
     }
     await app.close();
   });
@@ -35,12 +42,14 @@ describe('Dashboard (e2e)', () => {
   it('returns aggregate totals, organization summaries, and recent invoices', async () => {
     const organization = await request(app.getHttpServer())
       .post('/organizations')
+      .set(authorizationHeader(accessToken))
       .send({ name, plan: 'pro', countryCode: 'SE' })
       .expect(201);
     organizationId = organization.body.data.id as number;
 
     const user = await request(app.getHttpServer())
       .post('/users')
+      .set(authorizationHeader(accessToken))
       .send({
         organizationId,
         email: `e2e-dashboard-user-${Date.now()}@example.test`,
@@ -52,6 +61,7 @@ describe('Dashboard (e2e)', () => {
 
     const invoice = await request(app.getHttpServer())
       .post('/invoices')
+      .set(authorizationHeader(accessToken))
       .send({
         organizationId,
         amount: 225.75,
@@ -65,6 +75,7 @@ describe('Dashboard (e2e)', () => {
 
     await request(app.getHttpServer())
       .get('/dashboard')
+      .set(authorizationHeader(accessToken))
       .expect(200)
       .expect(({ body }) => {
         expect(body.meta).toEqual(
