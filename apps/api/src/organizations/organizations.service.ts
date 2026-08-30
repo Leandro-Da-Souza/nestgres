@@ -5,7 +5,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import type { OrganizationType } from './types/organizationType';
 import { PG_POOL } from '../database/database.constants';
@@ -234,8 +234,8 @@ export class OrganizationsService {
   ): Promise<OrganizationSummaryType> {
     const { organizationId, role } = user;
 
-    if (role !== 'super_admin' || id !== organizationId) {
-      throw new UnauthorizedException();
+    if (role !== 'super_admin' && id !== organizationId) {
+      throw new ForbiddenException('Access to this organization is denied.');
     }
 
     const query = {
