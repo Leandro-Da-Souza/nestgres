@@ -9,7 +9,7 @@ import {
   Matches,
 } from 'class-validator';
 import { INVOICE_STATUSES, type InvoiceStatus } from '../types/invoiceType';
-import { CURRENCIES, type Currency } from '../types/currencyType';
+import { CURRENCIES, type CurrencyType } from '../types/currencyType';
 
 export class CreateInvoiceDto {
   @IsInt()
@@ -21,7 +21,7 @@ export class CreateInvoiceDto {
   amount: number;
 
   @IsIn([...CURRENCIES])
-  currency: Currency;
+  currency: CurrencyType;
 
   @IsIn([...INVOICE_STATUSES])
   status: InvoiceStatus;

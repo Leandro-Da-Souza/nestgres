@@ -11,9 +11,56 @@ describe('Dashboard (e2e)', () => {
   let app: INestApplication<App>;
   let accessToken: string;
   let organizationId: number | undefined;
+  let emptyOrganizationId: number | undefined;
   let userId: number | undefined;
-  let invoiceId: number | undefined;
+  const invoiceIds: number[] = [];
   const name = `e2e-dashboard-organization-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  function addAmounts(left: string, right: string): string {
+    const [a, af = ''] = left.split('.');
+    const [b, bf = ''] = right.split('.');
+    const n = Math.max(af.length, bf.length);
+    const scale = 10 ** n;
+    const total =
+      Number(a) * scale +
+      Number(af.padEnd(n, '0') || '0') +
+      Number(b) * scale +
+      Number(bf.padEnd(n, '0') || '0');
+    return n === 0
+      ? String(total)
+      : String(Math.floor(total / scale)) +
+          '.' +
+          String(total % scale).padStart(n, '0');
+  }
+
+  function expectedTotals(
+    current: Array<{
+      currency: string;
+      totalInvoiceAmount: string;
+      totalOutstandingAmount: string;
+    }>,
+  ) {
+    const increments = {
+      EUR: ['151.00', '50.75'],
+      SEK: ['225.75', '0'],
+    } as const;
+    return ['EUR', 'SEK', 'USD'].flatMap((currency) => {
+      const old = current.find((value) => value.currency === currency);
+      const increment = increments[currency as keyof typeof increments];
+      if (!old && !increment) return [];
+      return [
+        {
+          currency,
+          totalInvoiceAmount: increment
+            ? addAmounts(old?.totalInvoiceAmount ?? '0', increment[0])
+            : old!.totalInvoiceAmount,
+          totalOutstandingAmount: increment
+            ? addAmounts(old?.totalOutstandingAmount ?? '0', increment[1])
+            : old!.totalOutstandingAmount,
+        },
+      ];
+    });
+  }
 
   beforeAll(async () => {
     app = await createE2eApp();
@@ -21,7 +68,7 @@ describe('Dashboard (e2e)', () => {
   });
 
   afterAll(async () => {
-    if (invoiceId !== undefined) {
+    for (const invoiceId of invoiceIds) {
       await request(app.getHttpServer())
         .delete(`/invoices/${invoiceId}`)
         .set(authorizationHeader(accessToken));
@@ -31,21 +78,35 @@ describe('Dashboard (e2e)', () => {
         .delete(`/users/${userId}`)
         .set(authorizationHeader(accessToken));
     }
-    if (organizationId !== undefined) {
-      await request(app.getHttpServer())
-        .delete(`/organizations/${organizationId}`)
-        .set(authorizationHeader(accessToken));
+    for (const id of [organizationId, emptyOrganizationId]) {
+      if (id !== undefined) {
+        await request(app.getHttpServer())
+          .delete(`/organizations/${id}`)
+          .set(authorizationHeader(accessToken));
+      }
     }
     await app.close();
   });
 
   it('returns aggregate totals, organization summaries, and recent invoices', async () => {
+    const dashboardBeforeFixtures = await request(app.getHttpServer())
+      .get('/dashboard')
+      .set(authorizationHeader(accessToken))
+      .expect(200);
+
     const organization = await request(app.getHttpServer())
       .post('/organizations')
       .set(authorizationHeader(accessToken))
       .send({ name, plan: 'pro', countryCode: 'SE' })
       .expect(201);
     organizationId = organization.body.data.id as number;
+
+    const emptyOrganization = await request(app.getHttpServer())
+      .post('/organizations')
+      .set(authorizationHeader(accessToken))
+      .send({ name: `${name}-empty`, plan: 'free', countryCode: 'SE' })
+      .expect(201);
+    emptyOrganizationId = emptyOrganization.body.data.id as number;
 
     const user = await request(app.getHttpServer())
       .post('/users')
@@ -59,19 +120,38 @@ describe('Dashboard (e2e)', () => {
       .expect(201);
     userId = user.body.data.id as number;
 
-    const invoice = await request(app.getHttpServer())
-      .post('/invoices')
-      .set(authorizationHeader(accessToken))
-      .send({
-        organizationId,
+    for (const fixture of [
+      {
+        amount: 100.25,
+        currency: 'EUR',
+        status: 'paid',
+        issuedOn: '2099-12-29',
+        dueOn: '2100-01-29',
+        paidAt: '2099-12-30',
+      },
+      {
+        amount: 50.75,
+        currency: 'EUR',
+        status: 'overdue',
+        issuedOn: '2099-12-30',
+        dueOn: '2100-01-30',
+      },
+      {
         amount: 225.75,
         currency: 'SEK',
-        status: 'overdue',
+        status: 'paid',
         issuedOn: '2099-12-31',
         dueOn: '2100-01-31',
-      })
-      .expect(201);
-    invoiceId = invoice.body.data.id as number;
+        paidAt: '2100-01-01',
+      },
+    ]) {
+      const invoice = await request(app.getHttpServer())
+        .post('/invoices')
+        .set(authorizationHeader(accessToken))
+        .send({ organizationId, ...fixture })
+        .expect(201);
+      invoiceIds.push(invoice.body.data.id as number);
+    }
 
     const memberToken = await createE2eAccessToken(
       app,
@@ -79,12 +159,10 @@ describe('Dashboard (e2e)', () => {
       'member',
     );
     const adminToken = await createE2eAccessToken(app, organizationId, 'admin');
-
     await request(app.getHttpServer())
       .get('/dashboard')
       .set(authorizationHeader(memberToken))
       .expect(403);
-
     await request(app.getHttpServer())
       .get('/dashboard')
       .set(authorizationHeader(adminToken))
@@ -108,35 +186,48 @@ describe('Dashboard (e2e)', () => {
             organizations: expect.any(Number),
             invoices: expect.any(Number),
             activeUsers: expect.any(Number),
-            totalInvoiceAmount: expect.any(String),
-            outstandingAmount: expect.any(String),
+            amountsByCurrency: expectedTotals(
+              dashboardBeforeFixtures.body.data.totals.amountsByCurrency,
+            ),
           }),
         );
-        expect(body.data.totals.organizations).toBeGreaterThanOrEqual(1);
-        expect(body.data.totals.invoices).toBeGreaterThanOrEqual(1);
-        expect(body.data.totals.activeUsers).toBeGreaterThanOrEqual(1);
-
         expect(body.data.organizations).toEqual(
           expect.arrayContaining([
-            expect.objectContaining({
+            {
               organizationId,
               organizationName: name,
               numberOfUsers: 1,
-              numberOfInvoices: 1,
-              totalInvoiceAmount: '225.75',
-              outstandingAmount: '225.75',
-            }),
+              numberOfInvoices: 3,
+              amountsByCurrency: [
+                {
+                  currency: 'EUR',
+                  totalInvoiceAmount: '151.00',
+                  totalOutstandingAmount: '50.75',
+                },
+                {
+                  currency: 'SEK',
+                  totalInvoiceAmount: '225.75',
+                  totalOutstandingAmount: '0',
+                },
+              ],
+            },
+            {
+              organizationId: emptyOrganizationId,
+              organizationName: `${name}-empty`,
+              numberOfUsers: 0,
+              numberOfInvoices: 0,
+              amountsByCurrency: [],
+            },
           ]),
         );
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(body.data.recentInvoices).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              id: invoiceId,
+              id: invoiceIds[2],
               organizationId,
               amount: '225.75',
               currency: 'SEK',
-              status: 'overdue',
+              status: 'paid',
             }),
           ]),
         );

@@ -13,6 +13,10 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { handleInvoiceWriteError } from './utils/handle-invoice-write-error';
 import { JwtPayloadType } from '../common/types/shared.types';
+import {
+  CurrencyTotalType,
+  OrganizationCurrencyType,
+} from './types/currencyType';
 
 @Injectable()
 export class InvoicesService {
@@ -286,6 +290,64 @@ export class InvoicesService {
     };
 
     const result = await this.pool.query<InvoiceType>(query);
+    return result.rows;
+  }
+
+  public async getGroupedCurrencies(): Promise<CurrencyTotalType[]> {
+    const query = {
+      text: `
+        SELECT 
+          currency,
+          COALESCE(sum(amount), 0) AS "totalInvoiceAmount",
+          COALESCE(sum(amount) FILTER ( WHERE status IN ('open', 'overdue')), 0) AS "totalOutstandingAmount"
+        FROM invoices
+        GROUP BY currency
+        ORDER BY currency
+      `,
+    };
+
+    const result = await this.pool.query<CurrencyTotalType>(query);
+    return result.rows;
+  }
+
+  public async getOrganizationCurrencyTotals(): Promise<
+    OrganizationCurrencyType[]
+  > {
+    const query = {
+      text: `
+        SELECT
+          organization_id AS "organizationId",
+          currency,
+          COALESCE(sum(amount), 0) AS "totalInvoiceAmount",
+          COALESCE(sum(amount) FILTER ( WHERE status IN ('open', 'overdue')), 0) AS "totalOutstandingAmount"
+        FROM invoices
+        GROUP BY organization_id, currency
+        ORDER BY organization_id,currency
+      `,
+    };
+
+    const result = await this.pool.query<OrganizationCurrencyType>(query);
+    return result.rows;
+  }
+
+  public async getOrganizationCurrencyTotalsById(
+    orgId: number,
+  ): Promise<CurrencyTotalType[]> {
+    const query = {
+      text: `
+        SELECT
+          currency,
+          COALESCE(sum(amount), 0) AS "totalInvoiceAmount",
+          COALESCE(sum(amount) FILTER ( WHERE status IN ('open', 'overdue')), 0) AS "totalOutstandingAmount"
+        FROM invoices
+        WHERE organization_id = $1
+        GROUP BY currency
+        ORDER BY currency
+      `,
+      values: [orgId],
+    };
+
+    const result = await this.pool.query<CurrencyTotalType>(query);
     return result.rows;
   }
 }

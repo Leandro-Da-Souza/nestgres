@@ -18,12 +18,14 @@ import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
 import { OrganizationSummaryType } from './types/organizationSummaryType';
 import { JwtPayloadType } from '../common/types/shared.types';
+import { InvoicesService } from '../invoices/invoices.service';
 
 @Injectable()
 export class OrganizationsService {
   constructor(
     @Inject(PG_POOL)
     private readonly pool: Pool,
+    private readonly invoiceService: InvoicesService,
   ) {}
 
   private readonly ORG_PROJECTION = `
@@ -225,14 +227,14 @@ export class OrganizationsService {
   }
 
   public async getOrganizationInvoices(
-    id: number,
+    orgId: number,
     user: JwtPayloadType,
   ): Promise<OrganizationInvoiceType[]> {
     const isSuperAdmin = user.role === 'super_admin';
 
     const organizationConstraint = !isSuperAdmin ? `AND o.id = $2` : '';
 
-    const values = !isSuperAdmin ? [id, user.organizationId] : [id];
+    const values = !isSuperAdmin ? [orgId, user.organizationId] : [orgId];
 
     const query = {
       text: `
@@ -275,9 +277,7 @@ export class OrganizationsService {
           o.id AS "organizationId",
           o.name AS "organizationName",
           COALESCE(us.number_of_users, 0)::int AS "numberOfUsers",
-          COALESCE(ins.number_of_invoices, 0)::int AS "numberOfInvoices",
-          COALESCE(ins.total_invoice_amount, 0) as "totalInvoiceAmount",
-          COALESCE(ins.outstanding_amount, 0) AS "outstandingAmount"
+          COALESCE(ins.number_of_invoices, 0)::int AS "numberOfInvoices"
         FROM organizations AS o
         LEFT JOIN (
           SELECT
@@ -290,10 +290,7 @@ export class OrganizationsService {
         LEFT JOIN (
           SELECT 
             organization_id,
-            count(*) AS "number_of_invoices",
-            SUM(amount) AS "total_invoice_amount",
-            SUM(amount) FILTER ( WHERE status IN ('open', 'overdue') )
-                AS "outstanding_amount"
+            count(*) AS "number_of_invoices"
           FROM invoices
           GROUP BY organization_id
         ) AS ins
@@ -303,26 +300,32 @@ export class OrganizationsService {
       values: [id],
     };
 
-    const result = await this.pool.query<OrganizationSummaryType>(query);
+    const [result, amountsByCurrency] = await Promise.all([
+      this.pool.query<Omit<OrganizationSummaryType, 'amountsByCurrency'>>(
+        query,
+      ),
+      this.invoiceService.getOrganizationCurrencyTotalsById(id),
+    ]);
+
     const summary = result.rows[0];
 
     if (!summary) {
       throw new NotFoundException(`Organization ${id} could not be found`);
     }
 
-    return summary;
+    return { ...summary, amountsByCurrency };
   }
 
-  public async getOrganizationSummaries(): Promise<OrganizationSummaryType[]> {
+  public async getOrganizationSummaries(): Promise<
+    Omit<OrganizationSummaryType, 'amountsByCurrency'>[]
+  > {
     const query = {
       text: `
         SELECT 
           o.id AS "organizationId",
           o.name AS "organizationName",
           COALESCE(us.number_of_users, 0)::int AS "numberOfUsers",
-          COALESCE(ins.number_of_invoices, 0)::int AS "numberOfInvoices",
-          COALESCE(ins.total_invoice_amount, 0) as "totalInvoiceAmount",
-          COALESCE(ins.outstanding_amount, 0) AS "outstandingAmount"
+          COALESCE(ins.number_of_invoices, 0)::int AS "numberOfInvoices"
         FROM organizations AS o
         LEFT JOIN (
           SELECT
@@ -335,10 +338,7 @@ export class OrganizationsService {
         LEFT JOIN (
           SELECT 
             organization_id,
-            count(*) AS "number_of_invoices",
-            SUM(amount) AS "total_invoice_amount",
-            SUM(amount) FILTER ( WHERE status IN ('open', 'overdue') )
-                AS "outstanding_amount"
+            count(*) AS "number_of_invoices"
           FROM invoices
           GROUP BY organization_id
         ) AS ins
@@ -347,9 +347,10 @@ export class OrganizationsService {
       `,
     };
 
-    const result = await this.pool.query<OrganizationSummaryType>(query);
-    const summary = result.rows;
-
-    return summary;
+    const result =
+      await this.pool.query<Omit<OrganizationSummaryType, 'amountsByCurrency'>>(
+        query,
+      );
+    return result.rows;
   }
 }

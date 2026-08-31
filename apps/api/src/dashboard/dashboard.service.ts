@@ -5,6 +5,8 @@ import { DashboardTotalType, DashboardType } from './types/dashboardType';
 import { OrganizationsService } from '../organizations/organizations.service';
 import { InvoicesService } from '../invoices/invoices.service';
 import { JwtPayloadType } from '../common/types/shared.types';
+import { filter } from 'rxjs';
+type DashboardCounts = Omit<DashboardTotalType, 'amountsByCurrency'>;
 
 @Injectable()
 export class DashboardService {
@@ -15,7 +17,7 @@ export class DashboardService {
     private readonly invoiceService: InvoicesService,
   ) {}
 
-  public async getDashboardTotal(): Promise<DashboardTotalType> {
+  public async getDashboardTotal(): Promise<DashboardCounts> {
     const query = {
       text: `
         SELECT 
@@ -24,34 +26,48 @@ export class DashboardService {
           (SELECT COUNT(*)::int FROM invoices)
             AS "invoices",
           (SELECT COUNT(*)::int FROM users WHERE users.active)
-            AS "activeUsers",
-          COALESCE(
-            (SELECT SUM(amount) FROM invoices),
-            0
-          ) AS "totalInvoiceAmount",
-          COALESCE(
-            (SELECT SUM(amount) FROM invoices WHERE status IN ('open', 'overdue')),
-            0
-          ) AS "outstandingAmount"
+            AS "activeUsers"
       `,
     };
 
-    const result = await this.pool.query<DashboardTotalType>(query);
+    const result = await this.pool.query<DashboardCounts>(query);
     return result.rows[0];
   }
 
   public async getDashboardSummary(
     user: JwtPayloadType,
   ): Promise<DashboardType> {
-    const [totals, organizations, recentInvoices] = await Promise.all([
+    const [
+      totals,
+      amountsByCurrency,
+      organizations,
+      orgCurrencyTotals,
+      recentInvoices,
+    ] = await Promise.all([
       this.getDashboardTotal(),
+      this.invoiceService.getGroupedCurrencies(),
       this.organizationService.getOrganizationSummaries(),
+      this.invoiceService.getOrganizationCurrencyTotals(),
       this.invoiceService.getRecentInvoices(user),
     ]);
 
+    const organizationSummaries = organizations.map((org) => ({
+      ...org,
+      amountsByCurrency: orgCurrencyTotals
+        .filter((row) => row.organizationId === org.organizationId)
+        .map((row) => ({
+          currency: row.currency,
+          totalInvoiceAmount: row.totalInvoiceAmount,
+          totalOutstandingAmount: row.totalOutstandingAmount,
+        })),
+    }));
+
     return {
-      totals,
-      organizations,
+      totals: {
+        ...totals,
+        amountsByCurrency,
+      },
+      organizations: organizationSummaries,
       recentInvoices,
     };
   }
