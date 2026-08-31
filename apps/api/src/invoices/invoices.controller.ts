@@ -23,6 +23,7 @@ export class InvoicesController {
   constructor(private readonly invoiceService: InvoicesService) {}
 
   @Get()
+  @Roles('admin', 'super_admin')
   getAllInvoices(
     @Request() req: AuthenticatedRequestType,
   ): Promise<InvoiceType[]> {
@@ -30,6 +31,7 @@ export class InvoicesController {
   }
 
   @Get(':id')
+  @Roles('admin', 'super_admin')
   getInvoiceById(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: AuthenticatedRequestType,

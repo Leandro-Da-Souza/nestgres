@@ -9,40 +9,91 @@ import { authorizationHeader, createE2eAccessToken } from './e2e-auth';
 
 describe('Invoices (e2e)', () => {
   let app: INestApplication<App>;
-  let accessToken: string;
+  let superAdminToken: string;
   let organizationId: number | undefined;
+  let otherOrganizationId: number | undefined;
+  let userId: number | undefined;
+  let otherUserId: number | undefined;
   let invoiceId: number | undefined;
-  const organizationName = `e2e-invoice-organization-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let otherInvoiceId: number | undefined;
 
   beforeAll(async () => {
     app = await createE2eApp();
-    accessToken = await createE2eAccessToken(app);
+    superAdminToken = await createE2eAccessToken(app);
   });
 
   afterAll(async () => {
-    if (invoiceId !== undefined) {
-      await request(app.getHttpServer())
-        .delete(`/invoices/${invoiceId}`)
-        .set(authorizationHeader(accessToken));
+    for (const id of [invoiceId, otherInvoiceId]) {
+      if (id !== undefined)
+        await request(app.getHttpServer())
+          .delete(`/invoices/${id}`)
+          .set(authorizationHeader(superAdminToken));
     }
-    if (organizationId !== undefined) {
-      await request(app.getHttpServer())
-        .delete(`/organizations/${organizationId}`)
-        .set(authorizationHeader(accessToken));
+    for (const id of [userId, otherUserId]) {
+      if (id !== undefined)
+        await request(app.getHttpServer())
+          .delete(`/users/${id}`)
+          .set(authorizationHeader(superAdminToken));
+    }
+    for (const id of [organizationId, otherOrganizationId]) {
+      if (id !== undefined)
+        await request(app.getHttpServer())
+          .delete(`/organizations/${id}`)
+          .set(authorizationHeader(superAdminToken));
     }
     await app.close();
   });
 
-  it('creates, reads, updates, lists, and deletes an invoice', async () => {
-    const organization = await request(app.getHttpServer())
+  it('isolates invoice reads and writes between populated organizations', async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const firstOrganization = await request(app.getHttpServer())
       .post('/organizations')
-      .set(authorizationHeader(accessToken))
-      .send({ name: organizationName, plan: 'free', countryCode: 'SE' })
+      .set(authorizationHeader(superAdminToken))
+      .send({
+        name: `e2e-invoice-a-${suffix}`,
+        plan: 'free',
+        countryCode: 'SE',
+      })
       .expect(201);
-    organizationId = organization.body.data.id as number;
-    const organizationAdminToken = await createE2eAccessToken(
+    organizationId = firstOrganization.body.data.id as number;
+    const secondOrganization = await request(app.getHttpServer())
+      .post('/organizations')
+      .set(authorizationHeader(superAdminToken))
+      .send({
+        name: `e2e-invoice-b-${suffix}`,
+        plan: 'free',
+        countryCode: 'SE',
+      })
+      .expect(201);
+    otherOrganizationId = secondOrganization.body.data.id as number;
+
+    const firstUser = await request(app.getHttpServer())
+      .post('/users')
+      .set(authorizationHeader(superAdminToken))
+      .send({
+        organizationId,
+        email: `e2e-invoice-a-${suffix}@example.test`,
+        displayName: 'Invoice A User',
+        role: 'member',
+      })
+      .expect(201);
+    userId = firstUser.body.data.id as number;
+    const secondUser = await request(app.getHttpServer())
+      .post('/users')
+      .set(authorizationHeader(superAdminToken))
+      .send({
+        organizationId: otherOrganizationId,
+        email: `e2e-invoice-b-${suffix}@example.test`,
+        displayName: 'Invoice B User',
+        role: 'member',
+      })
+      .expect(201);
+    otherUserId = secondUser.body.data.id as number;
+
+    const adminToken = await createE2eAccessToken(app, organizationId, 'admin');
+    const otherAdminToken = await createE2eAccessToken(
       app,
-      organizationId,
+      otherOrganizationId,
       'admin',
     );
     const memberToken = await createE2eAccessToken(
@@ -50,10 +101,15 @@ describe('Invoices (e2e)', () => {
       organizationId,
       'member',
     );
+    const nullOrganizationAdminToken = await createE2eAccessToken(
+      app,
+      null,
+      'admin',
+    );
 
     const created = await request(app.getHttpServer())
       .post('/invoices')
-      .set(authorizationHeader(organizationAdminToken))
+      .set(authorizationHeader(adminToken))
       .send({
         organizationId,
         amount: 125.5,
@@ -63,80 +119,127 @@ describe('Invoices (e2e)', () => {
         dueOn: '2026-01-31',
       })
       .expect(201);
-
     invoiceId = created.body.data.id as number;
-    expect(created.body).toMatchObject({
-      data: {
-        id: invoiceId,
-        organizationId,
-        amount: '125.50',
-        currency: 'SEK',
-        status: 'open',
-        issuedOn: '2025-12-31T23:00:00.000Z',
-        dueOn: '2026-01-30T23:00:00.000Z',
-        paidAt: null,
-      },
-      meta: {
-        timestamp: expect.any(String),
-        durationMs: expect.any(Number),
-        path: '/invoices',
-        method: 'POST',
-      },
+    expect(created.body.data).toMatchObject({
+      id: invoiceId,
+      organizationId,
+      amount: '125.50',
+      issuedOn: '2026-01-01',
+      dueOn: '2026-01-31',
+      paidAt: null,
+      createdAt: expect.any(String),
     });
 
-    await request(app.getHttpServer())
-      .get(`/invoices/${invoiceId}`)
-      .set(authorizationHeader(accessToken))
-      .expect(200)
-      .expect(({ body }) => {
-        expect(body.data).toMatchObject({ id: invoiceId, organizationId });
-      });
-
-    await request(app.getHttpServer())
-      .patch(`/invoices/${invoiceId}`)
-      .set(authorizationHeader(organizationAdminToken))
-      .send({ status: 'paid', paidAt: '2026-01-15T12:00:00.000Z' })
-      .expect(200)
-      .expect(({ body }) => {
-        expect(body.data).toMatchObject({
-          id: invoiceId,
-          status: 'paid',
-          paidAt: '2026-01-15T12:00:00.000Z',
-        });
-      });
-
-    await request(app.getHttpServer())
+    const otherCreated = await request(app.getHttpServer())
       .post('/invoices')
-      .set(authorizationHeader(memberToken))
+      .set(authorizationHeader(otherAdminToken))
       .send({
-        organizationId,
-        amount: 10,
-        currency: 'SEK',
+        organizationId: otherOrganizationId,
+        amount: 200,
+        currency: 'EUR',
         status: 'open',
         issuedOn: '2026-02-01',
         dueOn: '2026-02-28',
       })
-      .expect(403);
+      .expect(201);
+    otherInvoiceId = otherCreated.body.data.id as number;
 
     await request(app.getHttpServer())
       .get('/invoices')
-      .set(authorizationHeader(accessToken))
+      .set(authorizationHeader(adminToken))
       .expect(200)
       .expect(({ body }) => {
         expect(body.data).toEqual(
-          expect.arrayContaining([expect.objectContaining({ id: invoiceId })]),
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: invoiceId,
+              issuedOn: '2026-01-01',
+              dueOn: '2026-01-31',
+            }),
+          ]),
+        );
+        expect(body.data).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ id: otherInvoiceId }),
+          ]),
         );
       });
-
     await request(app.getHttpServer())
-      .delete(`/invoices/${invoiceId}`)
-      .set(authorizationHeader(organizationAdminToken))
-      .expect(204);
-    invoiceId = undefined;
-
-    await request(app.getHttpServer())
-      .get(`/invoices/${created.body.data.id as number}`)
-      .set(authorizationHeader(accessToken))
+      .get(`/invoices/${otherInvoiceId}`)
+      .set(authorizationHeader(adminToken))
       .expect(404);
+    await request(app.getHttpServer())
+      .get('/invoices')
+      .set(authorizationHeader(memberToken))
+      .expect(403);
+    await request(app.getHttpServer())
+      .get('/invoices')
+      .set(authorizationHeader(nullOrganizationAdminToken))
+      .expect(200)
+      .expect(({ body }) => expect(body.data).toEqual([]));
+
+    await request(app.getHttpServer())
+      .post('/invoices')
+      .set(authorizationHeader(adminToken))
+      .send({
+        organizationId: otherOrganizationId,
+        amount: 1,
+        currency: 'SEK',
+        status: 'open',
+        issuedOn: '2026-03-01',
+        dueOn: '2026-03-31',
+      })
+      .expect(403);
+    await request(app.getHttpServer())
+      .patch(`/invoices/${otherInvoiceId}`)
+      .set(authorizationHeader(adminToken))
+      .send({ amount: 999 })
+      .expect(404);
+    await request(app.getHttpServer())
+      .delete(`/invoices/${otherInvoiceId}`)
+      .set(authorizationHeader(adminToken))
+      .expect(404);
+    await request(app.getHttpServer())
+      .patch(`/invoices/${invoiceId}`)
+      .set(authorizationHeader(adminToken))
+      .send({ organizationId: otherOrganizationId })
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .get(`/invoices/${otherInvoiceId}`)
+      .set(authorizationHeader(superAdminToken))
+      .expect(200)
+      .expect(({ body }) =>
+        expect(body.data).toMatchObject({
+          id: otherInvoiceId,
+          organizationId: otherOrganizationId,
+          amount: '200.00',
+        }),
+      );
+    await request(app.getHttpServer())
+      .get(`/invoices/${invoiceId}`)
+      .set(authorizationHeader(superAdminToken))
+      .expect(200)
+      .expect(({ body }) =>
+        expect(body.data).toMatchObject({
+          id: invoiceId,
+          organizationId,
+          amount: '125.50',
+        }),
+      );
+
+    await request(app.getHttpServer())
+      .patch(`/invoices/${invoiceId}`)
+      .set(authorizationHeader(adminToken))
+      .send({ status: 'paid', paidAt: '2026-01-15T12:00:00.000Z' })
+      .expect(200)
+      .expect(({ body }) =>
+        expect(body.data).toMatchObject({
+          status: 'paid',
+          issuedOn: '2026-01-01',
+          dueOn: '2026-01-31',
+          paidAt: '2026-01-15T12:00:00.000Z',
+        }),
+      );
   });
 });

@@ -78,10 +78,16 @@ describe('Dashboard (e2e)', () => {
       organizationId,
       'member',
     );
+    const adminToken = await createE2eAccessToken(app, organizationId, 'admin');
 
     await request(app.getHttpServer())
       .get('/dashboard')
       .set(authorizationHeader(memberToken))
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .get('/dashboard')
+      .set(authorizationHeader(adminToken))
       .expect(403);
 
     await request(app.getHttpServer())

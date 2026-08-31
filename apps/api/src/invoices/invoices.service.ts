@@ -37,8 +37,8 @@ export class InvoicesService {
     amount,
     currency,
     status,
-    issued_on AS "issuedOn",
-    due_on AS "dueOn",
+    issued_on::text AS "issuedOn",
+    due_on::text AS "dueOn",
     paid_at AS "paidAt",
     created_at AS "createdAt"
   `;

@@ -26,15 +26,20 @@ export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
   @Get()
-  getOrganizations(): Promise<OrganizationType[]> {
-    return this.organizationsService.getOrganizations();
+  @Roles('admin', 'super_admin')
+  getOrganizations(
+    @Request() req: AuthenticatedRequestType,
+  ): Promise<OrganizationType[]> {
+    return this.organizationsService.getOrganizations(req.user);
   }
 
   @Get(':id')
+  @Roles('admin', 'super_admin')
   getOrganizationById(
     @Param('id', ParseIntPipe) id: number,
+    @Request() req: AuthenticatedRequestType,
   ): Promise<OrganizationType> {
-    return this.organizationsService.getOrganizationById(id);
+    return this.organizationsService.getOrganizationById(id, req.user);
   }
 
   @Roles('super_admin')

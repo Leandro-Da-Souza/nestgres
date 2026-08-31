@@ -7,7 +7,7 @@ export type OrganizationInvoiceType = {
   amount: string;
   currency: string;
   status: InvoiceStatus;
-  issuedOn: Date;
-  dueOn: Date;
+  issuedOn: string;
+  dueOn: string;
   paidAt: Date | null;
 };

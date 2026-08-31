@@ -40,26 +40,42 @@ export class OrganizationsService {
     countryCode: 'country_code',
   } as const satisfies Record<keyof UpdateOrganizationDto, string>;
 
-  public async getOrganizations(): Promise<OrganizationType[]> {
+  public async getOrganizations(
+    user: JwtPayloadType,
+  ): Promise<OrganizationType[]> {
+    const isSuperAdmin = user.role === 'super_admin';
+    const organizationConstraint = isSuperAdmin ? '' : 'WHERE id = $1';
+    const values = isSuperAdmin ? [] : [user.organizationId];
+
     const query = {
       text: `
       SELECT ${this.ORG_PROJECTION}
       FROM organizations
+      ${organizationConstraint}
     `,
+      values,
     };
 
     const res = await this.pool.query<OrganizationType>(query);
     return res.rows;
   }
 
-  public async getOrganizationById(id: number): Promise<OrganizationType> {
+  public async getOrganizationById(
+    id: number,
+    user: JwtPayloadType,
+  ): Promise<OrganizationType> {
+    const isSuperAdmin = user.role === 'super_admin';
+    const organizationConstraint = isSuperAdmin ? '' : 'AND id = $2';
+    const values = isSuperAdmin ? [id] : [id, user.organizationId];
+
     const query = {
       text: `
         SELECT ${this.ORG_PROJECTION}
         FROM organizations
         WHERE id = $1
+        ${organizationConstraint}
       `,
-      values: [id],
+      values,
     };
 
     const res = await this.pool.query<OrganizationType>(query);
@@ -227,9 +243,9 @@ export class OrganizationsService {
           i.amount,
           i.currency,
           i.status,
-          i.issued_on,
-          i.due_on,
-          i.paid_at
+          i.issued_on::text AS "issuedOn",
+          i.due_on::text AS "dueOn",
+          i.paid_at AS "paidAt"
         FROM organizations AS o 
         INNER JOIN invoices AS i on o.id = i.organization_id
         WHERE o.id = $1

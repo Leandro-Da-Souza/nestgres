@@ -63,6 +63,11 @@ describe('Organizations (e2e)', () => {
       organizationId,
       'member',
     );
+    const nullOrganizationAdminToken = await createE2eAccessToken(
+      app,
+      null,
+      'admin',
+    );
 
     const otherOrganization = await request(app.getHttpServer())
       .post('/organizations')
@@ -91,11 +96,32 @@ describe('Organizations (e2e)', () => {
 
     await request(app.getHttpServer())
       .get(`/organizations/${organizationId}`)
-      .set(authorizationHeader(accessToken))
+      .set(authorizationHeader(organizationAdminToken))
       .expect(200)
       .expect(({ body }) => {
         expect(body.data).toMatchObject({ id: organizationId, name });
       });
+
+    await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganizationId}`)
+      .set(authorizationHeader(organizationAdminToken))
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .get(`/organizations/${organizationId}`)
+      .set(authorizationHeader(memberToken))
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .get('/organizations')
+      .set(authorizationHeader(nullOrganizationAdminToken))
+      .expect(200)
+      .expect(({ body }) => expect(body.data).toEqual([]));
+
+    await request(app.getHttpServer())
+      .get(`/organizations/${organizationId}`)
+      .set(authorizationHeader(nullOrganizationAdminToken))
+      .expect(404);
 
     await request(app.getHttpServer())
       .patch(`/organizations/${organizationId}`)
@@ -108,14 +134,12 @@ describe('Organizations (e2e)', () => {
 
     await request(app.getHttpServer())
       .get('/organizations')
-      .set(authorizationHeader(accessToken))
+      .set(authorizationHeader(organizationAdminToken))
       .expect(200)
       .expect(({ body }) => {
-        expect(body.data).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({ id: organizationId }),
-          ]),
-        );
+        expect(body.data).toEqual([
+          expect.objectContaining({ id: organizationId }),
+        ]);
       });
 
     const user = await request(app.getHttpServer())
