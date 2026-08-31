@@ -24,6 +24,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
+
   @Get()
   getOrganizations(): Promise<OrganizationType[]> {
     return this.organizationsService.getOrganizations();
@@ -36,6 +37,7 @@ export class OrganizationsController {
     return this.organizationsService.getOrganizationById(id);
   }
 
+  @Roles('super_admin')
   @Post()
   createOrganization(
     @Body() body: CreateOrganizationDto,
@@ -43,6 +45,7 @@ export class OrganizationsController {
     return this.organizationsService.createOrganization(body);
   }
 
+  @Roles('super_admin')
   @Patch(':id')
   updateOrganization(
     @Param('id', ParseIntPipe) id: number,
@@ -51,24 +54,29 @@ export class OrganizationsController {
     return this.organizationsService.updateOrganization(id, changes);
   }
 
+  @Roles('super_admin')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteOrganization(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.organizationsService.deleteOrganization(id);
   }
 
+  @Roles('admin', 'super_admin')
   @Get(':id/users')
   getOrganizationUsers(
     @Param('id', ParseIntPipe) id: number,
+    @Request() req: AuthenticatedRequestType,
   ): Promise<OrganizationUserType[]> {
-    return this.organizationsService.getOrganizationUsers(id);
+    return this.organizationsService.getOrganizationUsers(id, req.user);
   }
 
+  @Roles('admin', 'super_admin')
   @Get(':id/invoices')
   getOrganizationInvoices(
     @Param('id', ParseIntPipe) id: number,
+    @Request() req: AuthenticatedRequestType,
   ): Promise<OrganizationInvoiceType[]> {
-    return this.organizationsService.getOrganizationInvoices(id);
+    return this.organizationsService.getOrganizationInvoices(id, req.user);
   }
 
   @Roles('admin', 'super_admin')

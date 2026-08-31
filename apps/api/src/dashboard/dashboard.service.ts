@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import { DashboardTotalType, DashboardType } from './types/dashboardType';
 import { OrganizationsService } from '../organizations/organizations.service';
 import { InvoicesService } from '../invoices/invoices.service';
+import { JwtPayloadType } from '../common/types/shared.types';
 
 @Injectable()
 export class DashboardService {
@@ -39,11 +40,13 @@ export class DashboardService {
     return result.rows[0];
   }
 
-  public async getDashboardSummary(): Promise<DashboardType> {
+  public async getDashboardSummary(
+    user: JwtPayloadType,
+  ): Promise<DashboardType> {
     const [totals, organizations, recentInvoices] = await Promise.all([
       this.getDashboardTotal(),
       this.organizationService.getOrganizationSummaries(),
-      this.invoiceService.getRecentInvoices(),
+      this.invoiceService.getRecentInvoices(user),
     ]);
 
     return {

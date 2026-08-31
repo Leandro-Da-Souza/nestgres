@@ -4,6 +4,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
@@ -11,6 +12,7 @@ import type { InvoiceType } from './types/invoiceType';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { handleInvoiceWriteError } from './utils/handle-invoice-write-error';
+import { JwtPayloadType } from '../common/types/shared.types';
 
 @Injectable()
 export class InvoicesService {
@@ -41,27 +43,51 @@ export class InvoicesService {
     created_at AS "createdAt"
   `;
 
-  public async getAllInvoices(): Promise<InvoiceType[]> {
+  public async getAllInvoices(user: JwtPayloadType): Promise<InvoiceType[]> {
+    const isSuperAdmin = user.role === 'super_admin';
+
+    const organizationConstraint = isSuperAdmin
+      ? ''
+      : 'WHERE organization_id = $1';
+
+    const values = isSuperAdmin ? [] : [user.organizationId];
+
     const query = {
       text: `
         SELECT ${this.INVOICE_PROJECTION}
         FROM invoices
+        ${organizationConstraint}
         ORDER BY id
       `,
+      values,
     };
 
     const result = await this.pool.query<InvoiceType>(query);
     return result.rows;
   }
 
-  public async getInvoiceById(id: number): Promise<InvoiceType> {
+  public async getInvoiceById(
+    id: number,
+    user: JwtPayloadType,
+  ): Promise<InvoiceType> {
+    const isSuperAdmin = user.role === 'super_admin';
+
+    const organizationConstraint = isSuperAdmin
+      ? ''
+      : 'AND organization_id = $2';
+
+    const values: Array<number | null> = isSuperAdmin
+      ? [id]
+      : [id, user.organizationId];
+
     const query = {
       text: `
         SELECT ${this.INVOICE_PROJECTION}
         FROM invoices
-        WHERE id = $1
+        WHERE id = $1  
+          ${organizationConstraint}
       `,
-      values: [id],
+      values,
     };
 
     const result = await this.pool.query<InvoiceType>(query);
@@ -74,7 +100,10 @@ export class InvoicesService {
     return invoice;
   }
 
-  public async createInvoice(body: CreateInvoiceDto): Promise<InvoiceType> {
+  public async createInvoice(
+    body: CreateInvoiceDto,
+    user: JwtPayloadType,
+  ): Promise<InvoiceType> {
     const {
       organizationId,
       amount,
@@ -84,6 +113,14 @@ export class InvoicesService {
       dueOn,
       paidAt,
     } = body;
+
+    const isSuperAdmin = user.role === 'super_admin';
+
+    if (!isSuperAdmin && organizationId !== user.organizationId) {
+      throw new ForbiddenException(
+        'Cannot create an invoice for another organization.',
+      );
+    }
 
     const query = {
       text: `
@@ -128,7 +165,19 @@ export class InvoicesService {
   public async updateInvoice(
     id: number,
     changes: UpdateInvoiceDto,
+    user: JwtPayloadType,
   ): Promise<InvoiceType> {
+    const isSuperAdmin = user.role === 'super_admin';
+
+    if (
+      !isSuperAdmin &&
+      changes.organizationId !== undefined &&
+      changes.organizationId !== user.organizationId
+    ) {
+      throw new ForbiddenException(
+        'Cannot move an invoice to another organization.',
+      );
+    }
     const assignments: string[] = [];
     const values: Array<string | number | null> = [];
 
@@ -155,11 +204,18 @@ export class InvoicesService {
     values.push(id);
     const idPlaceholder = `$${values.length}`;
 
+    let organizationConstraint = '';
+    if (!isSuperAdmin) {
+      values.push(user.organizationId);
+      organizationConstraint = `AND organization_id = $${values.length}`;
+    }
+
     const query = {
       text: `
         UPDATE invoices
         SET ${assignments.join(', ')}
         WHERE id = ${idPlaceholder}
+            ${organizationConstraint}
         RETURNING ${this.INVOICE_PROJECTION}
       `,
       values: values,
@@ -179,14 +235,23 @@ export class InvoicesService {
     }
   }
 
-  public async deleteInvoice(id: number): Promise<void> {
+  public async deleteInvoice(id: number, user: JwtPayloadType): Promise<void> {
+    const isSuperAdmin = user.role === 'super_admin';
+
+    const organizationConstraint = !isSuperAdmin
+      ? 'AND organization_id = $2'
+      : '';
+
+    const values = !isSuperAdmin ? [id, user.organizationId] : [id];
+
     const query = {
       text: `
         DELETE FROM invoices
         WHERE id = $1
+            ${organizationConstraint}
         RETURNING id
       `,
-      values: [id],
+      values,
     };
 
     const result = await this.pool.query<{ id: number }>(query);
@@ -197,15 +262,27 @@ export class InvoicesService {
     }
   }
 
-  public async getRecentInvoices(limit: number = 5): Promise<InvoiceType[]> {
+  public async getRecentInvoices(
+    user: JwtPayloadType,
+    limit: number = 5,
+  ): Promise<InvoiceType[]> {
+    const isSuperAdmin = user.role === 'super_admin';
+
+    const organizationConstraint = !isSuperAdmin
+      ? `WHERE organization_id = $2`
+      : '';
+
+    const values = !isSuperAdmin ? [limit, user.organizationId] : [limit];
+
     const query = {
       text: `
         SELECT ${this.INVOICE_PROJECTION}
         FROM invoices
+        ${organizationConstraint}
         ORDER BY issued_on DESC, id DESC
         LIMIT $1
       `,
-      values: [limit],
+      values,
     };
 
     const result = await this.pool.query<InvoiceType>(query);

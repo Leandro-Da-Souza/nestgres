@@ -40,10 +40,20 @@ describe('Invoices (e2e)', () => {
       .send({ name: organizationName, plan: 'free', countryCode: 'SE' })
       .expect(201);
     organizationId = organization.body.data.id as number;
+    const organizationAdminToken = await createE2eAccessToken(
+      app,
+      organizationId,
+      'admin',
+    );
+    const memberToken = await createE2eAccessToken(
+      app,
+      organizationId,
+      'member',
+    );
 
     const created = await request(app.getHttpServer())
       .post('/invoices')
-      .set(authorizationHeader(accessToken))
+      .set(authorizationHeader(organizationAdminToken))
       .send({
         organizationId,
         amount: 125.5,
@@ -84,7 +94,7 @@ describe('Invoices (e2e)', () => {
 
     await request(app.getHttpServer())
       .patch(`/invoices/${invoiceId}`)
-      .set(authorizationHeader(accessToken))
+      .set(authorizationHeader(organizationAdminToken))
       .send({ status: 'paid', paidAt: '2026-01-15T12:00:00.000Z' })
       .expect(200)
       .expect(({ body }) => {
@@ -94,6 +104,19 @@ describe('Invoices (e2e)', () => {
           paidAt: '2026-01-15T12:00:00.000Z',
         });
       });
+
+    await request(app.getHttpServer())
+      .post('/invoices')
+      .set(authorizationHeader(memberToken))
+      .send({
+        organizationId,
+        amount: 10,
+        currency: 'SEK',
+        status: 'open',
+        issuedOn: '2026-02-01',
+        dueOn: '2026-02-28',
+      })
+      .expect(403);
 
     await request(app.getHttpServer())
       .get('/invoices')
@@ -107,7 +130,7 @@ describe('Invoices (e2e)', () => {
 
     await request(app.getHttpServer())
       .delete(`/invoices/${invoiceId}`)
-      .set(authorizationHeader(accessToken))
+      .set(authorizationHeader(organizationAdminToken))
       .expect(204);
     invoiceId = undefined;
 

@@ -17,7 +17,10 @@ import { isPostgresError } from '../database/utils/is-postgres-error';
 import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
 import { OrganizationSummaryType } from './types/organizationSummaryType';
-import { JwtPayloadType } from '../common/types/shared.types';
+import {
+  AuthenticatedRequestType,
+  JwtPayloadType,
+} from '../common/types/shared.types';
 
 @Injectable()
 export class OrganizationsService {
@@ -179,7 +182,13 @@ export class OrganizationsService {
 
   public async getOrganizationUsers(
     id: number,
+    user: JwtPayloadType,
   ): Promise<OrganizationUserType[]> {
+    const isSuperAdmin = user.role === 'super_admin';
+
+    const organizationConstraint = !isSuperAdmin ? 'AND o.id = $2' : '';
+
+    const values = !isSuperAdmin ? [id, user.organizationId] : [id];
     const query = {
       text: `
         SELECT 
@@ -192,9 +201,10 @@ export class OrganizationsService {
         FROM organizations AS o 
         INNER JOIN users AS u ON o.id = u.organization_id
         WHERE o.id = $1
+        ${organizationConstraint}
         ORDER BY u.display_name ASC 
       `,
-      values: [id],
+      values,
     };
 
     const result = await this.pool.query<OrganizationUserType>(query);
@@ -203,7 +213,14 @@ export class OrganizationsService {
 
   public async getOrganizationInvoices(
     id: number,
+    user: JwtPayloadType,
   ): Promise<OrganizationInvoiceType[]> {
+    const isSuperAdmin = user.role === 'super_admin';
+
+    const organizationConstraint = !isSuperAdmin ? `AND o.id = $2` : '';
+
+    const values = !isSuperAdmin ? [id, user.organizationId] : [id];
+
     const query = {
       text: `
         SELECT
@@ -219,9 +236,10 @@ export class OrganizationsService {
         FROM organizations AS o 
         INNER JOIN invoices AS i on o.id = i.organization_id
         WHERE o.id = $1
+        ${organizationConstraint}
         ORDER BY i.issued_on DESC
       `,
-      values: [id],
+      values,
     };
 
     const result = await this.pool.query<OrganizationInvoiceType>(query);

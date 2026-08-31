@@ -11,6 +11,7 @@ describe('Organizations (e2e)', () => {
   let app: INestApplication<App>;
   let accessToken: string;
   let organizationId: number | undefined;
+  let otherOrganizationId: number | undefined;
   let userId: number | undefined;
   let invoiceId: number | undefined;
   const name = `e2e-organization-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -36,6 +37,11 @@ describe('Organizations (e2e)', () => {
         .delete(`/organizations/${organizationId}`)
         .set(authorizationHeader(accessToken));
     }
+    if (otherOrganizationId !== undefined) {
+      await request(app.getHttpServer())
+        .delete(`/organizations/${otherOrganizationId}`)
+        .set(authorizationHeader(accessToken));
+    }
     await app.close();
   });
 
@@ -47,6 +53,27 @@ describe('Organizations (e2e)', () => {
       .expect(201);
 
     organizationId = created.body.data.id as number;
+    const organizationAdminToken = await createE2eAccessToken(
+      app,
+      organizationId,
+      'admin',
+    );
+    const memberToken = await createE2eAccessToken(
+      app,
+      organizationId,
+      'member',
+    );
+
+    const otherOrganization = await request(app.getHttpServer())
+      .post('/organizations')
+      .set(authorizationHeader(accessToken))
+      .send({
+        name: `${name}-other`,
+        plan: 'free',
+        countryCode: 'SE',
+      })
+      .expect(201);
+    otherOrganizationId = otherOrganization.body.data.id as number;
     expect(created.body).toMatchObject({
       data: {
         id: organizationId,
@@ -119,7 +146,7 @@ describe('Organizations (e2e)', () => {
 
     await request(app.getHttpServer())
       .get(`/organizations/${organizationId}/users`)
-      .set(authorizationHeader(accessToken))
+      .set(authorizationHeader(organizationAdminToken))
       .expect(200)
       .expect(({ body }) => {
         expect(body.data).toEqual(
@@ -136,8 +163,19 @@ describe('Organizations (e2e)', () => {
       });
 
     await request(app.getHttpServer())
+      .get(`/organizations/${organizationId}/users`)
+      .set(authorizationHeader(memberToken))
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganizationId}/users`)
+      .set(authorizationHeader(organizationAdminToken))
+      .expect(200)
+      .expect(({ body }) => expect(body.data).toEqual([]));
+
+    await request(app.getHttpServer())
       .get(`/organizations/${organizationId}/invoices`)
-      .set(authorizationHeader(accessToken))
+      .set(authorizationHeader(organizationAdminToken))
       .expect(200)
       .expect(({ body }) => {
         expect(body.data).toEqual(
@@ -155,8 +193,14 @@ describe('Organizations (e2e)', () => {
       });
 
     await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganizationId}/invoices`)
+      .set(authorizationHeader(organizationAdminToken))
+      .expect(200)
+      .expect(({ body }) => expect(body.data).toEqual([]));
+
+    await request(app.getHttpServer())
       .get(`/organizations/${organizationId}/summary`)
-      .set(authorizationHeader(await createE2eAccessToken(app, organizationId)))
+      .set(authorizationHeader(organizationAdminToken))
       .expect(200)
       .expect(({ body }) => {
         expect(body.data).toMatchObject({
@@ -168,6 +212,11 @@ describe('Organizations (e2e)', () => {
           outstandingAmount: '125.50',
         });
       });
+
+    await request(app.getHttpServer())
+      .get(`/organizations/${otherOrganizationId}/summary`)
+      .set(authorizationHeader(organizationAdminToken))
+      .expect(403);
 
     await request(app.getHttpServer())
       .delete(`/invoices/${invoiceId}`)
@@ -184,6 +233,11 @@ describe('Organizations (e2e)', () => {
       .set(authorizationHeader(accessToken))
       .expect(204);
     organizationId = undefined;
+    await request(app.getHttpServer())
+      .delete(`/organizations/${otherOrganizationId}`)
+      .set(authorizationHeader(accessToken))
+      .expect(204);
+    otherOrganizationId = undefined;
 
     await request(app.getHttpServer())
       .get(`/organizations/${created.body.data.id as number}`)

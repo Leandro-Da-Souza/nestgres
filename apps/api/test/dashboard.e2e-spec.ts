@@ -73,6 +73,17 @@ describe('Dashboard (e2e)', () => {
       .expect(201);
     invoiceId = invoice.body.data.id as number;
 
+    const memberToken = await createE2eAccessToken(
+      app,
+      organizationId,
+      'member',
+    );
+
+    await request(app.getHttpServer())
+      .get('/dashboard')
+      .set(authorizationHeader(memberToken))
+      .expect(403);
+
     await request(app.getHttpServer())
       .get('/dashboard')
       .set(authorizationHeader(accessToken))
