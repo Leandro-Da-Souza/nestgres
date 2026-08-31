@@ -17,10 +17,7 @@ import { isPostgresError } from '../database/utils/is-postgres-error';
 import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
 import { OrganizationSummaryType } from './types/organizationSummaryType';
-import {
-  AuthenticatedRequestType,
-  JwtPayloadType,
-} from '../common/types/shared.types';
+import { JwtPayloadType } from '../common/types/shared.types';
 
 @Injectable()
 export class OrganizationsService {

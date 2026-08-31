@@ -4,6 +4,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
@@ -11,6 +12,7 @@ import { AuthenticationUserType, UserType } from './types/userType';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { handleUserWriteError } from './utils/handle-user-write-error';
+import { JwtPayloadType } from '../common/types/shared.types';
 
 @Injectable()
 export class UsersService {
@@ -38,28 +40,50 @@ export class UsersService {
     created_at AS "createdAt"
   `;
 
-  public async getAllUsers(): Promise<UserType[]> {
+  public async getAllUsers(user: JwtPayloadType): Promise<UserType[]> {
+    const isSuperAdmin = user.role === 'super_admin';
+
+    const organizationConstraint = !isSuperAdmin
+      ? `WHERE organization_id = $1`
+      : '';
+
+    const values = !isSuperAdmin ? [user.organizationId] : [];
+
     const query = {
       text: `
         SELECT 
           ${this.USER_PROJECTION}
         FROM users
+        ${organizationConstraint}
         ORDER BY id
       `,
+      values,
     };
 
     const result = await this.pool.query<UserType>(query);
     return result.rows;
   }
 
-  public async getUserById(id: number): Promise<UserType> {
+  public async getUserById(
+    id: number,
+    reqUser: JwtPayloadType,
+  ): Promise<UserType> {
+    const isSuperAdmin = reqUser.role === 'super_admin';
+
+    const organizationConstraint = !isSuperAdmin
+      ? 'AND organization_id = $2'
+      : '';
+
+    const values = !isSuperAdmin ? [id, reqUser.organizationId] : [id];
+
     const query = {
       text: `
         SELECT ${this.USER_PROJECTION}
         FROM users
         WHERE id = $1
+        ${organizationConstraint}
       `,
-      values: [id],
+      values,
     };
 
     const result = await this.pool.query<UserType>(query);
