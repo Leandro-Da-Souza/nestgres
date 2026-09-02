@@ -1,5 +1,5 @@
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-  <div class="form-group-wrapper email">
+  <app-form-field class="form-group-wrapper email">
     <label for="email">Email</label>
     <input type="email" id="email" formControlName="email" autocomplete="email">
     @if (loginForm.controls.email.touched) {
@@ -10,8 +10,8 @@
         <p class="field-error">Enter a valid email.</p>
       }
     }
-  </div>
-  <div class="form-group-wrapper password">
+  </app-form-field>
+  <app-form-field class="form-group-wrapper password">
     <label for="password">Password</label>
     <input type="password" formControlName="password" id="password" autocomplete="current-password">
     @if (loginForm.controls.password.touched) {
@@ -19,10 +19,8 @@
         <p class="field-error">Password is required.</p>
       }
     }
-  </div>
-  <div class="form-group-wrapper submit-btn">
-    <app-button type="submit" [disabled]="loginForm.invalid">
-      Submit
-    </app-button>
-  </div>
+  </app-form-field>
+  <app-button type="submit" [disabled]="loginForm.invalid">
+    Submit
+  </app-button>
 </form>
