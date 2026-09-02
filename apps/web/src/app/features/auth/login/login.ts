@@ -1,8 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Button } from '../../../ui/button/button';
 
 @Component({
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Button],
   selector: 'app-login',
   styleUrl: './login.scss',
   templateUrl: './login.html',

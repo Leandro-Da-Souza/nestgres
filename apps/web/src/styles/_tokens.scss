@@ -6,8 +6,26 @@
   --color-text-muted: #71717a;
   --color-border: #e4e4e7;
 
+  // primary
   --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-active: #1e40af;
+  --color-on-primary: #ffffff;
+  --color-focus-primary: #93c5fd;
+
+  // secondary
+  --color-secondary: #e4e4e7;
+  --color-secondary-hover: #d4d4d8;
+  --color-secondary-active: #a1a1aa;
+  --color-on-secondary: #18181b;
+  --color-focus-secondary: #71717a;
+
+  // danger
   --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-danger-active: #991b1b;
+  --color-on-danger: #ffffff;
+  --color-focus-danger: #fca5a5;
 
   // Spacing
   --space-1: 0.25rem;
