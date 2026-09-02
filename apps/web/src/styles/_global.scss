@@ -1,0 +1,16 @@
+body {
+  display: grid;
+
+  grid-template-columns:
+    [full-start] minmax(var(--space-4), 1fr)
+    [content-start] minmax(0, var(--content-width))
+    [content-end] minmax(var(--space-4), 1fr)
+    [full-end];
+
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+app-root {
+  grid-column: content;
+}
