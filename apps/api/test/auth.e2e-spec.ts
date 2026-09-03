@@ -43,14 +43,34 @@ describe('Authentication (e2e)', () => {
   });
 
   it('accepts valid credentials and returns an authenticated profile', async () => {
-    const login = await request(app.getHttpServer())
+    const client = request.agent(app.getHttpServer());
+    const login = await client
       .post('/auth/login')
       .send({ email, password })
       .expect(200);
-    expect(login.body.data.access_token).toEqual(expect.any(String));
-    await request(app.getHttpServer())
+    expect(login.body.data).toMatchObject({
+      user: {
+        id: userId,
+        email,
+        displayName: 'Authentication E2E User',
+        role: 'member',
+        organizationId: null,
+        active: true,
+      },
+    });
+    expect(login.body.data).not.toHaveProperty('access_token');
+    expect(login.body.data.user).not.toHaveProperty('passwordHash');
+
+    const accessTokenCookie = login.headers['set-cookie']?.find((cookie) =>
+      cookie.startsWith('access_token='),
+    );
+    expect(accessTokenCookie).toEqual(expect.any(String));
+    expect(accessTokenCookie).toContain('HttpOnly');
+    expect(accessTokenCookie).toContain('SameSite=Lax');
+    expect(accessTokenCookie).toContain('Path=/');
+
+    await client
       .get('/auth/profile')
-      .set(authorizationHeader(login.body.data.access_token as string))
       .expect(200)
       .expect(({ body }) =>
         expect(body.data).toMatchObject({

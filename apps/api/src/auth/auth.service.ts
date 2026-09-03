@@ -3,6 +3,17 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
+import type { UserType } from '../users/types/userType';
+
+export type AuthenticatedUser = Pick<
+  UserType,
+  'id' | 'organizationId' | 'displayName' | 'email' | 'role' | 'active'
+>;
+
+export type LoginResult = {
+  accessToken: string;
+  user: AuthenticatedUser;
+};
 
 @Injectable()
 export class AuthService {
@@ -11,7 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  public async authenticate(data: LoginDto): Promise<{ access_token: string }> {
+  public async authenticate(data: LoginDto): Promise<LoginResult> {
     const { email: submittedEmail, password: submittedPassword } = data;
 
     const user =
@@ -34,8 +45,18 @@ export class AuthService {
       organizationId: user.organizationId,
     };
 
+    const accessToken = await this.jwtService.signAsync(payload);
+
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      accessToken,
+      user: {
+        id: user.id,
+        organizationId: user.organizationId,
+        email: user.email,
+        displayName: user.displayName,
+        role: user.role,
+        active: user.active,
+      },
     };
   }
 }

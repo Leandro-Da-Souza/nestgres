@@ -6,11 +6,13 @@ import {
   HttpStatus,
   Post,
   Request,
+  Res,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { AuthenticatedUser, AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { type AuthenticatedRequestType } from '../common/types/shared.types';
 import { Public } from '../common/decorators/public.decorator';
+import { type Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -19,8 +21,21 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  login(@Body() data: LoginDto) {
-    return this.authService.authenticate(data);
+  async login(
+    @Body() data: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<{ user: AuthenticatedUser }> {
+    const { accessToken, user } = await this.authService.authenticate(data);
+
+    response.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    return { user };
   }
 
   @Get('profile')
