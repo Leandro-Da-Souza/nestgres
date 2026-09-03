@@ -4,6 +4,7 @@ import { Button } from '../../../ui/button/button';
 import { FormField } from '../../../ui/form/form-field/form-field';
 import { Label } from '../../../ui/form/label/label';
 import { Input } from '../../../ui/form/input/input';
+import { Auth } from '../auth';
 
 @Component({
   imports: [ReactiveFormsModule, Button, FormField, Label, Input],
@@ -13,6 +14,7 @@ import { Input } from '../../../ui/form/input/input';
 })
 export class Login {
   private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(Auth);
 
   protected readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.email, Validators.required]],
@@ -26,6 +28,14 @@ export class Login {
     }
 
     const credentials = this.loginForm.getRawValue();
-    console.log(credentials);
+
+    this.auth.login(credentials).subscribe({
+      next: (response) => {
+        console.log(response);
+      },
+      error: (error: unknown) => {
+        console.error(error);
+      },
+    });
   }
 }
