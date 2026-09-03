@@ -2,17 +2,19 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Button } from '../../../ui/button/button';
 import { FormField } from '../../../ui/form/form-field/form-field';
+import { Label } from '../../../ui/form/label/label';
+import { Input } from '../../../ui/form/input/input';
 
 @Component({
-  imports: [ReactiveFormsModule, Button, FormField],
+  imports: [ReactiveFormsModule, Button, FormField, Label, Input],
   selector: 'app-login',
   styleUrl: './login.scss',
   templateUrl: './login.html',
 })
 export class Login {
-  private readonly formBuilder = inject(FormBuilder);
+  private readonly fb = inject(FormBuilder);
 
-  protected readonly loginForm = this.formBuilder.nonNullable.group({
+  protected readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.email, Validators.required]],
     password: ['', Validators.required],
   });
