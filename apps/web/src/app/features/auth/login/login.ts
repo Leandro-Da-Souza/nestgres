@@ -31,7 +31,14 @@ export class Login {
 
     this.auth.login(credentials).subscribe({
       next: (response) => {
-        console.log(response);
+        this.auth.getProfile().subscribe({
+          next: (response) => {
+            console.log(response);
+          },
+          error: (error: unknown) => {
+            console.log(error);
+          },
+        });
       },
       error: (error: unknown) => {
         console.error(error);
