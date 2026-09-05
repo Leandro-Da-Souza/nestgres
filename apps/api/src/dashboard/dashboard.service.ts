@@ -5,7 +5,6 @@ import { DashboardTotalType, DashboardType } from './types/dashboardType';
 import { OrganizationsService } from '../organizations/organizations.service';
 import { InvoicesService } from '../invoices/invoices.service';
 import { JwtPayloadType } from '../common/types/shared.types';
-import { filter } from 'rxjs';
 type DashboardCounts = Omit<DashboardTotalType, 'amountsByCurrency'>;
 
 @Injectable()
