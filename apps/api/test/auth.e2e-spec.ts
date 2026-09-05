@@ -61,9 +61,12 @@ describe('Authentication (e2e)', () => {
     expect(login.body.data).not.toHaveProperty('access_token');
     expect(login.body.data.user).not.toHaveProperty('passwordHash');
 
-    const accessTokenCookie = login.headers['set-cookie']?.find((cookie) =>
+    const cookie = login.headers['set-cookie'] as unknown as string[];
+
+    const accessTokenCookie = cookie?.find((cookie: string) =>
       cookie.startsWith('access_token='),
     );
+
     expect(accessTokenCookie).toEqual(expect.any(String));
     expect(accessTokenCookie).toContain('HttpOnly');
     expect(accessTokenCookie).toContain('SameSite=Lax');
@@ -74,10 +77,12 @@ describe('Authentication (e2e)', () => {
       .expect(200)
       .expect(({ body }) =>
         expect(body.data).toMatchObject({
-          sub: userId,
+          id: userId,
+          organizationId: null,
+          displayName: 'Authentication E2E User',
           email,
           role: 'member',
-          organizationId: null,
+          active: true,
         }),
       );
   });

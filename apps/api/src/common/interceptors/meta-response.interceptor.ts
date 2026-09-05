@@ -6,32 +6,23 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { type Request } from 'express';
-
-export interface MetaApiResponse<T> {
-  data: T;
-  meta: {
-    timestamp: string;
-    durationMs: number;
-    path: string;
-    method: string;
-  };
-}
+import type { Request } from 'express';
+import type { ApiResponse } from '@nestgres/contracts';
 
 @Injectable()
 export class MetaResponseInterceptor<T> implements NestInterceptor<
   T,
-  MetaApiResponse<T>
+  ApiResponse<T>
 > {
   intercept(
     context: ExecutionContext,
     next: CallHandler<T>,
-  ): Observable<MetaApiResponse<T>> {
+  ): Observable<ApiResponse<T>> {
     const startedAt = Date.now();
     const request = context.switchToHttp().getRequest<Request>();
 
     return next.handle().pipe(
-      map((data) => ({
+      map((data: T): ApiResponse<T> => ({
         data,
         meta: {
           timestamp: new Date().toISOString(),

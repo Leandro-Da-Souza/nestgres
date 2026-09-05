@@ -8,15 +8,20 @@ import {
   Request,
   Res,
 } from '@nestjs/common';
-import { AuthenticatedUser, AuthService } from './auth.service';
+import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { type AuthenticatedRequestType } from '../common/types/shared.types';
 import { Public } from '../common/decorators/public.decorator';
-import { type Response } from 'express';
+import type { Response } from 'express';
+import type { AuthenticatedUser, LoginData } from '@nestgres/contracts';
+import { UsersService } from '../users/users.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UsersService,
+  ) {}
 
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -24,7 +29,7 @@ export class AuthController {
   async login(
     @Body() data: LoginDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<{ user: AuthenticatedUser }> {
+  ): Promise<LoginData> {
     const { accessToken, user } = await this.authService.authenticate(data);
 
     response.cookie('access_token', accessToken, {
@@ -39,7 +44,9 @@ export class AuthController {
   }
 
   @Get('profile')
-  getProfile(@Request() req: AuthenticatedRequestType) {
-    return req.user;
+  async getProfile(
+    @Request() req: AuthenticatedRequestType,
+  ): Promise<AuthenticatedUser> {
+    return await this.userService.getUserProfileData(req.user.sub);
   }
 }

@@ -12,7 +12,7 @@ export type UserType = {
   createdAt: Date;
 };
 
-export type AuthenticationUserType = Pick<
+export type AuthUserWithPass = Pick<
   UserType,
   'id' | 'organizationId' | 'email' | 'role' | 'displayName' | 'active'
 > & {

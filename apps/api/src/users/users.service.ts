@@ -8,11 +8,12 @@ import {
 } from '@nestjs/common';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
-import { AuthenticationUserType, UserType } from './types/userType';
+import { AuthUserWithPass, UserType } from './types/userType';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { handleUserWriteError } from './utils/handle-user-write-error';
 import { JwtPayloadType } from '../common/types/shared.types';
+import type { AuthenticatedUser } from '@nestgres/contracts';
 
 @Injectable()
 export class UsersService {
@@ -196,7 +197,7 @@ export class UsersService {
 
   public async findUserForAuthentication(
     email: string,
-  ): Promise<AuthenticationUserType | null> {
+  ): Promise<AuthUserWithPass | null> {
     const query = {
       text: `
         SELECT 
@@ -213,7 +214,33 @@ export class UsersService {
       values: [email],
     };
 
-    const result = await this.pool.query<AuthenticationUserType>(query);
+    const result = await this.pool.query<AuthUserWithPass>(query);
     return result.rows[0] ?? null;
+  }
+
+  public async getUserProfileData(id: number): Promise<AuthenticatedUser> {
+    const query = {
+      text: `
+        SELECT
+          id,
+          organization_id as "organizationId",
+          display_name as "displayName",
+          email,
+          role,
+          active
+        FROM users
+        WHERE id = $1
+      `,
+      values: [id],
+    };
+
+    const result = await this.pool.query<AuthenticatedUser>(query);
+    const user = result.rows[0];
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    return user;
   }
 }

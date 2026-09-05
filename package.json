@@ -2,9 +2,10 @@
   "name": "nestgres",
   "version": "1.0.0",
   "private": true,
-  "description": "A full-stack dashboard application built as a hands-on exploration of NestJS, PostgreSQL, Angular",
+  "description": "A full-stack dashboard application built as hands-on exploration of NestJS, PostgreSQL, Angular",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",

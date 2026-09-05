@@ -1,44 +1,17 @@
 import { inject, Service } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-export type AuthenticatedUser = {
-  id: number;
-  organizationId: number | null;
-  displayName: string;
-  email: string;
-  role: 'member' | 'admin' | 'super_admin';
-  active: boolean;
-};
-
-export type LoginCredentials = {
-  email: string;
-  password: string;
-};
-
-export type MetaResponse = {
-  timestamp: string;
-  durationMs: number;
-  path: string;
-  method: string;
-};
-
-export type ApiResponse = {
-  data: {
-    user: AuthenticatedUser;
-  };
-  meta: MetaResponse;
-};
+import type { ProfileResponse, LoginResponse, LoginRequest } from '@nestgres/contracts';
 
 @Service()
 export class Auth {
   private http = inject(HttpClient);
 
-  public login(credentials: LoginCredentials): Observable<ApiResponse> {
-    return this.http.post<ApiResponse>('/auth/login', credentials);
+  public login(credentials: LoginRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>('/auth/login', credentials);
   }
 
-  public getProfile(): Observable<any> {
-    return this.http.get<any>('/auth/profile');
+  public getProfile(): Observable<ProfileResponse> {
+    return this.http.get<ProfileResponse>('/auth/profile');
   }
 }

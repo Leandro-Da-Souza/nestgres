@@ -1,6 +1,7 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import type { LoginRequest } from '@nestgres/contracts';
 
-export class LoginDto {
+export class LoginDto implements LoginRequest {
   @IsEmail()
   email: string;
 
