@@ -44,9 +44,9 @@ export class AuthController {
   }
 
   @Get('profile')
-  async getProfile(
+  getProfile(
     @Request() req: AuthenticatedRequestType,
   ): Promise<AuthenticatedUser> {
-    return await this.userService.getUserProfileData(req.user.sub);
+    return this.userService.getUserProfileData(req.user.sub);
   }
 }

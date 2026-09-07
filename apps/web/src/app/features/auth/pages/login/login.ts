@@ -1,10 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Button } from '../../../ui/button/button';
-import { FormField } from '../../../ui/form/form-field/form-field';
-import { Label } from '../../../ui/form/label/label';
-import { Input } from '../../../ui/form/input/input';
-import { Auth } from '../auth';
+import { Button } from '../../../../ui/button/button';
+import { FormField } from '../../../../ui/form/form-field/form-field';
+import { Label } from '../../../../ui/form/label/label';
+import { Input } from '../../../../ui/form/input/input';
+import { AuthService } from '../../auth.service';
 
 @Component({
   imports: [ReactiveFormsModule, Button, FormField, Label, Input],
@@ -14,7 +14,7 @@ import { Auth } from '../auth';
 })
 export class Login {
   private readonly fb = inject(FormBuilder);
-  private readonly auth = inject(Auth);
+  private readonly auth = inject(AuthService);
 
   protected readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.email, Validators.required]],
@@ -31,14 +31,7 @@ export class Login {
 
     this.auth.login(credentials).subscribe({
       next: (response) => {
-        this.auth.getProfile().subscribe({
-          next: (response) => {
-            console.log(response);
-          },
-          error: (error: unknown) => {
-            console.log(error);
-          },
-        });
+        console.log(response.data.user);
       },
       error: (error: unknown) => {
         console.error(error);

@@ -237,7 +237,7 @@ export class UsersService {
     const result = await this.pool.query<AuthenticatedUser>(query);
     const user = result.rows[0];
 
-    if (!user) {
+    if (!user || !user.active) {
       throw new UnauthorizedException();
     }
 
