@@ -7,8 +7,7 @@ import type {
   LoginRequest,
   AuthenticatedUser,
 } from '@nestgres/contracts';
-
-export type AuthStatus = 'checking' | 'authenticated' | 'anonymous' | 'error';
+import { AuthStatus } from './types/auth.types';
 
 @Service()
 export class AuthService {
@@ -26,6 +25,15 @@ export class AuthService {
       tap((response) => {
         this.currentUser.set(response.data.user);
         this.currentStatus.set('authenticated');
+      }),
+    );
+  }
+
+  public logout(): Observable<void> {
+    return this.http.post<void>('/auth/logout', {}).pipe(
+      tap(() => {
+        this.currentStatus.set('anonymous');
+        this.currentUser.set(null);
       }),
     );
   }

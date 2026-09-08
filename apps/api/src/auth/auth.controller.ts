@@ -43,6 +43,17 @@ export class AuthController {
     return { user };
   }
 
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  logout(@Res({ passthrough: true }) response: Response): void {
+    response.clearCookie('access_token', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      path: '/',
+    });
+  }
+
   @Get('profile')
   getProfile(
     @Request() req: AuthenticatedRequestType,

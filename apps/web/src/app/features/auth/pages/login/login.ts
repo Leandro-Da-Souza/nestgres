@@ -5,6 +5,7 @@ import { FormField } from '../../../../ui/form/form-field/form-field';
 import { Label } from '../../../../ui/form/label/label';
 import { Input } from '../../../../ui/form/input/input';
 import { AuthService } from '../../auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   imports: [ReactiveFormsModule, Button, FormField, Label, Input],
@@ -15,6 +16,7 @@ import { AuthService } from '../../auth.service';
 export class Login {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
   protected readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.email, Validators.required]],
@@ -32,6 +34,7 @@ export class Login {
     this.auth.login(credentials).subscribe({
       next: (response) => {
         console.log(response.data.user);
+        this.router.navigate(['/dashboard']);
       },
       error: (error: unknown) => {
         console.error(error);
