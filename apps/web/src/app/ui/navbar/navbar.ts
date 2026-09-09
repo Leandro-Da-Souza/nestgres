@@ -1,9 +1,25 @@
-import { Component } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+
+export type Link = {
+  path: string;
+  name: string;
+};
 
 @Component({
-  imports: [],
+  imports: [RouterLink, RouterLinkActive],
   selector: 'app-navbar',
   styleUrl: './navbar.scss',
   templateUrl: './navbar.html',
 })
-export class Navbar {}
+export class Navbar {
+  protected links: Link[] = [
+    { path: '/dashboard', name: 'Dashboard' },
+    { path: '/users', name: 'Users' },
+    { path: '/organizations', name: 'Organizations' },
+    { path: '/invoices', name: 'Invoices' },
+  ];
+
+  public variant = input('primary');
+  public className = computed(() => `navbar navbar__${this.variant()}`);
+}

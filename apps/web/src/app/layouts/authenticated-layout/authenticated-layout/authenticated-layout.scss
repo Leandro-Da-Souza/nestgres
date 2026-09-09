@@ -1,0 +1,14 @@
+:host {
+  display: grid;
+
+  grid-template-columns:
+    [full-start] minmax(var(--space-4), 1fr)
+    [content-start] minmax(0, var(--content-width))
+    [content-end] minmax(var(--space-4), 1fr)
+    [full-end];
+}
+
+main {
+  grid-column: content;
+}
+

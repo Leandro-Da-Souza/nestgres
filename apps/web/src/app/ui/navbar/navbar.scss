@@ -1,0 +1,24 @@
+:host {
+  grid-column: full;
+}
+
+.navbar {
+  min-height: 60px;
+  &__primary {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary)
+  }
+  &__container {
+    display: flex;
+    gap: 4.5rem;
+    max-width: var(--content-width);
+    padding: var(--space-4) 0;
+    margin-inline: auto;
+  }
+
+  &__links {
+    list-style: none;
+    display: flex;
+    gap: 10px;
+  }
+}
