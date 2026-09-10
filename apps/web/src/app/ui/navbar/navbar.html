@@ -1,12 +1,14 @@
 <nav [class]="className()">
   <div class="navbar__container">
-      <h3 class="navbar__logo">Nestgres</h3>
-      <ul class="navbar__links">
+      <h2 class="navbar__logo">Nestgres</h2>
+      <ul class="navbar__items">
         @for (link of links; track link.name) {
-          <li class="navbar__link">
-            <a routerLink="{{link.path}}" routerLinkActive="active-link">{{link.name}}</a>
+          <li class="navbar__item">
+            <a class="navbar__link" routerLink="{{link.path}}" routerLinkActive="active-link">{{link.name}}</a>
           </li>
         }
       </ul>
+      // DROPDOWN PLACEHOLDER
+      <div class="dropdown"></div>
   </div>
 </nav>
