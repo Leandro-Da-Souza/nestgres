@@ -13,16 +13,4 @@ import { Router } from '@angular/router';
 export class Dashboard {
   private readonly dashboardService = inject(DashboardService);
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
-
-  protected handleLogout(): void {
-    this.authService.logout().subscribe({
-      next: () => {
-        void this.router.navigate(['/login']);
-      },
-      error: (error: unknown) => {
-        console.error(error);
-      },
-    });
-  }
 }

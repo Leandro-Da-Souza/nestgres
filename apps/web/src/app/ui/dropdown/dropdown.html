@@ -1,1 +1,14 @@
-<p>dropdown works!</p>
+<div class="dropdown">
+  <div class="dropdown__icon" (click)="toggleOpen()">
+    @if (isOpen()) {
+      <span>&#10005;</span>
+    } @else {
+      <span>&#9776;</span>
+    }
+  </div>
+  @if (isOpen()) {
+    <div class="dropdown__menu">
+      <ng-content></ng-content>
+    </div>
+  }
+</div>

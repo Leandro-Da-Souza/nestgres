@@ -17,15 +17,22 @@
   }
 
   &__items {
+    width: 100%;
     list-style: none;
     display: flex;
-    gap: 10px;
+    justify-content: space-between;
   }
   &__link {
     text-decoration: none;
     color: inherit;
   }
+  &__dropdown {
+    position: absolute;
+    right: 2.5rem;
+  }
+
   .active-link {
     text-decoration: underline;
   }
+
 }

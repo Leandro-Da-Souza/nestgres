@@ -1,0 +1,13 @@
+.dropdown {
+  position: relative;
+  &__icon{
+    cursor: pointer;
+    font-size: 20px;
+  }
+  &__menu {
+    position: absolute;
+    border: 1px solid var(--color-on-primary);
+    padding: var(--space-2) var(--space-4);
+    background-color: var(--color-secondary);
+  }
+}

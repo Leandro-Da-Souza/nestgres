@@ -1,5 +1,8 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Dropdown } from '../dropdown/dropdown';
+import { Button } from '../button/button';
+import { LogoutButton } from '../../features/auth/components/logout-button/logout-button';
 
 export type NavLink = {
   path: string;
@@ -7,7 +10,7 @@ export type NavLink = {
 };
 
 @Component({
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, Dropdown, LogoutButton],
   selector: 'app-navbar',
   styleUrl: './navbar.scss',
   templateUrl: './navbar.html',
