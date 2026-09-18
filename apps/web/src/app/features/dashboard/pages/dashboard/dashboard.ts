@@ -23,27 +23,26 @@ export class Dashboard {
   );
 
   protected readonly organizationChartData$ = this.organizations$.pipe(
-    map(
-      (organization) =>
-        ({
-          labels: organization.map((org) => org.organizationName),
-          datasets: [
-            {
-              label: 'Total Invoiced',
-              data: organization.map((org) => {
-                const euro = org.amountsByCurrency.find((amounts) => amounts.currency === 'EUR');
-                return Number(euro?.totalInvoiceAmount ?? 0);
-              }),
-            },
-            {
-              label: 'Total Outstanding',
-              data: organization.map((org) => {
-                const euro = org.amountsByCurrency.find((amount) => amount.currency === 'EUR');
-                return Number(euro?.totalOutstandingAmount ?? 0);
-              }),
-            },
-          ],
-        }) satisfies ChartData<'bar'>,
-    ),
+    map((organization) => {
+      return {
+        labels: organization.map((org) => org.organizationName),
+        datasets: [
+          {
+            label: 'Total Invoiced',
+            data: organization.map((org) => {
+              const euro = org.amountsByCurrency.find((amounts) => amounts.currency === 'EUR');
+              return Number(euro?.totalInvoiceAmount ?? 0);
+            }),
+          },
+          {
+            label: 'Total Outstanding',
+            data: organization.map((org) => {
+              const euro = org.amountsByCurrency.find((amount) => amount.currency === 'EUR');
+              return Number(euro?.totalOutstandingAmount ?? 0);
+            }),
+          },
+        ],
+      } satisfies ChartData<'bar'>;
+    }),
   );
 }
