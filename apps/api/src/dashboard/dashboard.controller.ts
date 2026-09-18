@@ -1,8 +1,8 @@
 import { Controller, Get, Request } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
-import { type DashboardType } from './types/dashboardType';
 import { Roles } from '../common/decorators/roles.decorator';
 import { type AuthenticatedRequestType } from '../common/types/shared.types';
+import { DashboardData } from '@nestgres/contracts';
 
 @Controller('dashboard')
 export class DashboardController {
@@ -12,7 +12,7 @@ export class DashboardController {
   @Get()
   async getDashboardSummary(
     @Request() req: AuthenticatedRequestType,
-  ): Promise<DashboardType> {
+  ): Promise<DashboardData> {
     return this.dashboardService.getDashboardSummary(req.user);
   }
 }

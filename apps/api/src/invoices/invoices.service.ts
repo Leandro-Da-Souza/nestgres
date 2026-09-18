@@ -8,15 +8,12 @@ import {
 } from '@nestjs/common';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
-import type { InvoiceType } from './types/invoiceType';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { handleInvoiceWriteError } from './utils/handle-invoice-write-error';
 import { JwtPayloadType } from '../common/types/shared.types';
-import {
-  CurrencyTotalType,
-  OrganizationCurrencyType,
-} from './types/currencyType';
+import { OrganizationCurrencyType } from './types/currencyType';
+import { CurrencyTotal, Invoice } from '@nestgres/contracts';
 
 @Injectable()
 export class InvoicesService {
@@ -43,11 +40,11 @@ export class InvoicesService {
     status,
     issued_on::text AS "issuedOn",
     due_on::text AS "dueOn",
-    paid_at AS "paidAt",
-    created_at AS "createdAt"
+    paid_at::text AS "paidAt",
+    created_at::text AS "createdAt"
   `;
 
-  public async getAllInvoices(user: JwtPayloadType): Promise<InvoiceType[]> {
+  public async getAllInvoices(user: JwtPayloadType): Promise<Invoice[]> {
     const isSuperAdmin = user.role === 'super_admin';
 
     const organizationConstraint = isSuperAdmin
@@ -66,14 +63,14 @@ export class InvoicesService {
       values,
     };
 
-    const result = await this.pool.query<InvoiceType>(query);
+    const result = await this.pool.query<Invoice>(query);
     return result.rows;
   }
 
   public async getInvoiceById(
     id: number,
     user: JwtPayloadType,
-  ): Promise<InvoiceType> {
+  ): Promise<Invoice> {
     const isSuperAdmin = user.role === 'super_admin';
 
     const organizationConstraint = isSuperAdmin
@@ -94,7 +91,7 @@ export class InvoicesService {
       values,
     };
 
-    const result = await this.pool.query<InvoiceType>(query);
+    const result = await this.pool.query<Invoice>(query);
     const invoice = result.rows[0];
 
     if (!invoice) {
@@ -107,7 +104,7 @@ export class InvoicesService {
   public async createInvoice(
     body: CreateInvoiceDto,
     user: JwtPayloadType,
-  ): Promise<InvoiceType> {
+  ): Promise<Invoice> {
     const {
       organizationId,
       amount,
@@ -151,7 +148,7 @@ export class InvoicesService {
     };
 
     try {
-      const result = await this.pool.query<InvoiceType>(query);
+      const result = await this.pool.query<Invoice>(query);
       const invoice = result.rows[0];
 
       if (!invoice) {
@@ -170,7 +167,7 @@ export class InvoicesService {
     id: number,
     changes: UpdateInvoiceDto,
     user: JwtPayloadType,
-  ): Promise<InvoiceType> {
+  ): Promise<Invoice> {
     const isSuperAdmin = user.role === 'super_admin';
 
     if (
@@ -226,7 +223,7 @@ export class InvoicesService {
     };
 
     try {
-      const result = await this.pool.query<InvoiceType>(query);
+      const result = await this.pool.query<Invoice>(query);
       const invoice = result.rows[0];
 
       if (!invoice) {
@@ -269,7 +266,7 @@ export class InvoicesService {
   public async getRecentInvoices(
     user: JwtPayloadType,
     limit: number = 5,
-  ): Promise<InvoiceType[]> {
+  ): Promise<Invoice[]> {
     const isSuperAdmin = user.role === 'super_admin';
 
     const organizationConstraint = !isSuperAdmin
@@ -289,11 +286,11 @@ export class InvoicesService {
       values,
     };
 
-    const result = await this.pool.query<InvoiceType>(query);
+    const result = await this.pool.query<Invoice>(query);
     return result.rows;
   }
 
-  public async getGroupedCurrencies(): Promise<CurrencyTotalType[]> {
+  public async getGroupedCurrencies(): Promise<CurrencyTotal[]> {
     const query = {
       text: `
         SELECT 
@@ -306,7 +303,7 @@ export class InvoicesService {
       `,
     };
 
-    const result = await this.pool.query<CurrencyTotalType>(query);
+    const result = await this.pool.query<CurrencyTotal>(query);
     return result.rows;
   }
 
@@ -332,7 +329,7 @@ export class InvoicesService {
 
   public async getOrganizationCurrencyTotalsById(
     orgId: number,
-  ): Promise<CurrencyTotalType[]> {
+  ): Promise<CurrencyTotal[]> {
     const query = {
       text: `
         SELECT
@@ -347,7 +344,7 @@ export class InvoicesService {
       values: [orgId],
     };
 
-    const result = await this.pool.query<CurrencyTotalType>(query);
+    const result = await this.pool.query<CurrencyTotal>(query);
     return result.rows;
   }
 }

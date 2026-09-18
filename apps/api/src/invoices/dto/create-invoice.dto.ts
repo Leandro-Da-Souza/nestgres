@@ -8,7 +8,8 @@ import {
   IsOptional,
   Matches,
 } from 'class-validator';
-import { INVOICE_STATUSES, type InvoiceStatus } from '../types/invoiceType';
+import { INVOICE_STATUSES } from '../constants/invoice.constants';
+import type { InvoiceStatus } from '@nestgres/contracts';
 import { CURRENCIES, type CurrencyType } from '../types/currencyType';
 
 export class CreateInvoiceDto {

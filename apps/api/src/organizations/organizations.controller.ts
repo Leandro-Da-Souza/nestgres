@@ -17,9 +17,9 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
-import { OrganizationSummaryType } from './types/organizationSummaryType';
 import { type AuthenticatedRequestType } from '../common/types/shared.types';
 import { Roles } from '../common/decorators/roles.decorator';
+import { OrganizationSummary } from '@nestgres/contracts';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -89,7 +89,7 @@ export class OrganizationsController {
   getOrganizationSummary(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: AuthenticatedRequestType,
-  ): Promise<OrganizationSummaryType> {
+  ): Promise<OrganizationSummary> {
     return this.organizationsService.getOrganizationSummary(id, req.user);
   }
 }

@@ -12,11 +12,11 @@ import {
   Request,
 } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
-import type { InvoiceType } from './types/invoiceType';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { type AuthenticatedRequestType } from '../common/types/shared.types';
+import { Invoice } from '@nestgres/contracts';
 
 @Controller('invoices')
 export class InvoicesController {
@@ -24,9 +24,7 @@ export class InvoicesController {
 
   @Get()
   @Roles('admin', 'super_admin')
-  getAllInvoices(
-    @Request() req: AuthenticatedRequestType,
-  ): Promise<InvoiceType[]> {
+  getAllInvoices(@Request() req: AuthenticatedRequestType): Promise<Invoice[]> {
     return this.invoiceService.getAllInvoices(req.user);
   }
 
@@ -35,7 +33,7 @@ export class InvoicesController {
   getInvoiceById(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: AuthenticatedRequestType,
-  ): Promise<InvoiceType> {
+  ): Promise<Invoice> {
     return this.invoiceService.getInvoiceById(id, req.user);
   }
 
@@ -44,7 +42,7 @@ export class InvoicesController {
   createInvoice(
     @Body() body: CreateInvoiceDto,
     @Request() req: AuthenticatedRequestType,
-  ): Promise<InvoiceType> {
+  ): Promise<Invoice> {
     return this.invoiceService.createInvoice(body, req.user);
   }
 

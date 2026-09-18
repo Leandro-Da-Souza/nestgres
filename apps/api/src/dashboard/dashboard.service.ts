@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
-import { DashboardTotalType, DashboardType } from './types/dashboardType';
 import { OrganizationsService } from '../organizations/organizations.service';
 import { InvoicesService } from '../invoices/invoices.service';
 import { JwtPayloadType } from '../common/types/shared.types';
-type DashboardCounts = Omit<DashboardTotalType, 'amountsByCurrency'>;
+import { DashboardData, DashboardTotals } from '@nestgres/contracts';
+type DashboardCounts = Omit<DashboardTotals, 'amountsByCurrency'>;
 
 @Injectable()
 export class DashboardService {
@@ -35,7 +35,7 @@ export class DashboardService {
 
   public async getDashboardSummary(
     user: JwtPayloadType,
-  ): Promise<DashboardType> {
+  ): Promise<DashboardData> {
     const [
       totals,
       amountsByCurrency,

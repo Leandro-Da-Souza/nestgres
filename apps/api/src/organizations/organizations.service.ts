@@ -16,9 +16,9 @@ import { DeletedOrganizationRow } from './types/deletedOrganizationRow';
 import { isPostgresError } from '../database/utils/is-postgres-error';
 import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
-import { OrganizationSummaryType } from './types/organizationSummaryType';
 import { JwtPayloadType } from '../common/types/shared.types';
 import { InvoicesService } from '../invoices/invoices.service';
+import { OrganizationSummary } from '@nestgres/contracts';
 
 @Injectable()
 export class OrganizationsService {
@@ -264,7 +264,7 @@ export class OrganizationsService {
   public async getOrganizationSummary(
     id: number,
     user: JwtPayloadType,
-  ): Promise<OrganizationSummaryType> {
+  ): Promise<OrganizationSummary> {
     const { organizationId, role } = user;
 
     if (role !== 'super_admin' && id !== organizationId) {
@@ -301,9 +301,7 @@ export class OrganizationsService {
     };
 
     const [result, amountsByCurrency] = await Promise.all([
-      this.pool.query<Omit<OrganizationSummaryType, 'amountsByCurrency'>>(
-        query,
-      ),
+      this.pool.query<Omit<OrganizationSummary, 'amountsByCurrency'>>(query),
       this.invoiceService.getOrganizationCurrencyTotalsById(id),
     ]);
 
@@ -317,7 +315,7 @@ export class OrganizationsService {
   }
 
   public async getOrganizationSummaries(): Promise<
-    Omit<OrganizationSummaryType, 'amountsByCurrency'>[]
+    Omit<OrganizationSummary, 'amountsByCurrency'>[]
   > {
     const query = {
       text: `
@@ -348,7 +346,7 @@ export class OrganizationsService {
     };
 
     const result =
-      await this.pool.query<Omit<OrganizationSummaryType, 'amountsByCurrency'>>(
+      await this.pool.query<Omit<OrganizationSummary, 'amountsByCurrency'>>(
         query,
       );
     return result.rows;

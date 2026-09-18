@@ -1,4 +1,4 @@
-import { InvoiceStatus } from '../../invoices/types/invoiceType';
+import type { InvoiceStatus } from '@nestgres/contracts';
 
 export type OrganizationInvoiceType = {
   invoiceId: number;

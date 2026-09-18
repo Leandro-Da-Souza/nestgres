@@ -1,13 +1,8 @@
+import { CurrencyTotal } from '@nestgres/contracts';
+
 export const CURRENCIES = ['SEK', 'EUR', 'USD'] as const;
 export type CurrencyType = (typeof CURRENCIES)[number];
 
-export type CurrencyTotalType = {
-  currency: CurrencyType;
-  // keep amounts below as strings, JS can introduce inaccuracies for floating point numbers
-  totalInvoiceAmount: string;
-  totalOutstandingAmount: string;
-};
-
-export type OrganizationCurrencyType = CurrencyTotalType & {
+export type OrganizationCurrencyType = CurrencyTotal & {
   organizationId: number;
 };
