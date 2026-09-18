@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { App } from 'supertest/types';
-import { createE2eApp } from './create-e2e-app';
+import { apiRequest as request, createE2eApp } from './create-e2e-app';
 import { authorizationHeader, createE2eAccessToken } from './e2e-auth';
 
 describe('AppController (e2e)', () => {
@@ -26,7 +25,7 @@ describe('AppController (e2e)', () => {
           meta: {
             timestamp: expect.any(String),
             durationMs: expect.any(Number),
-            path: '/',
+            path: '/api/',
             method: 'GET',
           },
         });

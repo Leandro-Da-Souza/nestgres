@@ -21,7 +21,7 @@ export class AuthService {
   public readonly isAuthenticated = computed(() => this.status() === 'authenticated');
 
   public login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>('/auth/login', credentials).pipe(
+    return this.http.post<LoginResponse>('/api/auth/login', credentials).pipe(
       tap((response) => {
         this.currentUser.set(response.data.user);
         this.currentStatus.set('authenticated');
@@ -30,7 +30,7 @@ export class AuthService {
   }
 
   public logout(): Observable<void> {
-    return this.http.post<void>('/auth/logout', {}).pipe(
+    return this.http.post<void>('/api/auth/logout', {}).pipe(
       tap(() => {
         this.currentStatus.set('anonymous');
         this.currentUser.set(null);
@@ -39,7 +39,7 @@ export class AuthService {
   }
 
   public getProfile(): Observable<ProfileResponse> {
-    return this.http.get<ProfileResponse>('/auth/profile').pipe(
+    return this.http.get<ProfileResponse>('/api/auth/profile').pipe(
       tap((response) => {
         this.currentUser.set(response.data);
         this.currentStatus.set('authenticated');
@@ -61,5 +61,10 @@ export class AuthService {
         return EMPTY;
       }),
     );
+  }
+
+  public clearSession(): void {
+    this.currentUser.set(null)
+    this.currentStatus.set('anonymous')
   }
 }

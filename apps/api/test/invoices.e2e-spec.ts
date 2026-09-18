@@ -2,9 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { App } from 'supertest/types';
-import { createE2eApp } from './create-e2e-app';
+import { apiRequest as request, createE2eApp } from './create-e2e-app';
 import { authorizationHeader, createE2eAccessToken } from './e2e-auth';
 
 describe('Invoices (e2e)', () => {
@@ -238,7 +237,7 @@ describe('Invoices (e2e)', () => {
           status: 'paid',
           issuedOn: '2026-01-01',
           dueOn: '2026-01-31',
-          paidAt: '2026-01-15T12:00:00.000Z',
+          paidAt: '2026-01-15 13:00:00+01',
         }),
       );
   });

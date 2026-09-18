@@ -3,12 +3,15 @@
 
 import { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import request from 'supertest';
 import { App } from 'supertest/types';
 import * as argon2 from 'argon2';
 import { PG_POOL } from '../src/database/database.constants';
 import { Pool } from 'pg';
-import { createE2eApp } from './create-e2e-app';
+import {
+  apiAgent,
+  apiRequest as request,
+  createE2eApp,
+} from './create-e2e-app';
 import { authorizationHeader, createE2eAccessToken } from './e2e-auth';
 
 describe('Authentication (e2e)', () => {
@@ -43,7 +46,7 @@ describe('Authentication (e2e)', () => {
   });
 
   it('accepts valid credentials and returns an authenticated profile', async () => {
-    const client = request.agent(app.getHttpServer());
+    const client = apiAgent(app.getHttpServer());
     const login = await client
       .post('/auth/login')
       .send({ email, password })

@@ -8,6 +8,6 @@ export class DashboardService {
   private readonly http = inject(HttpClient);
 
   public getDashboard(): Observable<DashboardResponse> {
-    return this.http.get<DashboardResponse>('/dashboard');
+    return this.http.get<DashboardResponse>('/api/dashboard');
   }
 }

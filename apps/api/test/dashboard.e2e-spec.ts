@@ -2,9 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { App } from 'supertest/types';
-import { createE2eApp } from './create-e2e-app';
+import { apiRequest as request, createE2eApp } from './create-e2e-app';
 import { authorizationHeader, createE2eAccessToken } from './e2e-auth';
 
 describe('Dashboard (e2e)', () => {
@@ -177,7 +176,7 @@ describe('Dashboard (e2e)', () => {
           expect.objectContaining({
             timestamp: expect.any(String),
             durationMs: expect.any(Number),
-            path: '/dashboard',
+            path: '/api/dashboard',
             method: 'GET',
           }),
         );
