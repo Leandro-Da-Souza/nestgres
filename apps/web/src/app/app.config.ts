@@ -9,6 +9,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { AuthService } from './features/auth/auth.service';
 import { unauthorizedInterceptor } from './features/auth/interceptors/unauthorized-interceptor';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,5 +22,6 @@ export const appConfig: ApplicationConfig = {
       const authService = inject(AuthService);
       return authService.restoreSession();
     }),
+    provideCharts(withDefaultRegisterables())
   ],
 };

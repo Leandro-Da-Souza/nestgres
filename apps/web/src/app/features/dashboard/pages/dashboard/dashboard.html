@@ -1,3 +1,4 @@
-@if (dashboard$ | async; as dashboard) {
-  <pre>{{ dashboard | json }}</pre>
+@if (organizationChartData$ | async; as chartData) {
+  <app-grouped-bar-chart title="EUR invoices by organization"
+                         [data]="chartData"></app-grouped-bar-chart>
 }
