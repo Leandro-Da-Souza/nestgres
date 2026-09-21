@@ -7,7 +7,6 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import type { OrganizationType } from './types/organizationType';
 import { PG_POOL } from '../database/database.constants';
 import { Pool } from 'pg';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -18,7 +17,7 @@ import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
 import { JwtPayloadType } from '../common/types/shared.types';
 import { InvoicesService } from '../invoices/invoices.service';
-import { OrganizationSummary } from '@nestgres/contracts';
+import { Organization, OrganizationSummary } from '@nestgres/contracts';
 
 @Injectable()
 export class OrganizationsService {
@@ -33,7 +32,7 @@ export class OrganizationsService {
         name,
         plan,
         country_code AS "countryCode",
-        created_at AS "createdAt"
+        created_at::text AS "createdAt"
   `;
 
   private ORG_UPDATE_COLUMNS = {
@@ -42,9 +41,7 @@ export class OrganizationsService {
     countryCode: 'country_code',
   } as const satisfies Record<keyof UpdateOrganizationDto, string>;
 
-  public async getOrganizations(
-    user: JwtPayloadType,
-  ): Promise<OrganizationType[]> {
+  public async getOrganizations(user: JwtPayloadType): Promise<Organization[]> {
     const isSuperAdmin = user.role === 'super_admin';
     const organizationConstraint = isSuperAdmin ? '' : 'WHERE id = $1';
     const values = isSuperAdmin ? [] : [user.organizationId];
@@ -58,14 +55,14 @@ export class OrganizationsService {
       values,
     };
 
-    const res = await this.pool.query<OrganizationType>(query);
+    const res = await this.pool.query<Organization>(query);
     return res.rows;
   }
 
   public async getOrganizationById(
     id: number,
     user: JwtPayloadType,
-  ): Promise<OrganizationType> {
+  ): Promise<Organization> {
     const isSuperAdmin = user.role === 'super_admin';
     const organizationConstraint = isSuperAdmin ? '' : 'AND id = $2';
     const values = isSuperAdmin ? [id] : [id, user.organizationId];
@@ -80,7 +77,7 @@ export class OrganizationsService {
       values,
     };
 
-    const res = await this.pool.query<OrganizationType>(query);
+    const res = await this.pool.query<Organization>(query);
     const organization = res.rows[0];
 
     if (!organization) {
@@ -92,7 +89,7 @@ export class OrganizationsService {
 
   public async createOrganization(
     body: CreateOrganizationDto,
-  ): Promise<OrganizationType> {
+  ): Promise<Organization> {
     const { name, plan, countryCode } = body;
 
     const query = {
@@ -104,7 +101,7 @@ export class OrganizationsService {
       values: [name, plan, countryCode],
     };
 
-    const res = await this.pool.query<OrganizationType>(query);
+    const res = await this.pool.query<Organization>(query);
     const organization = res.rows[0];
 
     if (!organization) {
@@ -119,7 +116,7 @@ export class OrganizationsService {
   public async updateOrganization(
     id: number,
     changes: UpdateOrganizationDto,
-  ): Promise<OrganizationType> {
+  ): Promise<Organization> {
     const assignments: string[] = [];
     const values: Array<string | number> = [];
 
@@ -155,7 +152,7 @@ export class OrganizationsService {
       values: values,
     };
 
-    const result = await this.pool.query<OrganizationType>(query);
+    const result = await this.pool.query<Organization>(query);
     const organization = result.rows[0];
 
     if (!organization) {

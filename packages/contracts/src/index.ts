@@ -15,4 +15,4 @@ export type { DashboardTotals, DashboardData, DashboardResponse } from './dashbo
 
 export type { InvoiceStatus, Invoice } from './invoice.js'
 
-export type { OrganizationSummary } from './organization.js'
+export type { OrganizationSummary, Organization, OrganizationsResponse, OrganizationPlan } from './organization.js'

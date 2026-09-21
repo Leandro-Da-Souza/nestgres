@@ -9,7 +9,7 @@ import { Button } from '../../../../ui/button/button';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
-  imports: [AsyncPipe, GroupedBarChart, Button],
+  imports: [GroupedBarChart, Button],
   selector: 'app-dashboard',
   styleUrl: './dashboard.scss',
   templateUrl: './dashboard.html',

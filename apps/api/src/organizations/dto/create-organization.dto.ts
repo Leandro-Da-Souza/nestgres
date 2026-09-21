@@ -5,10 +5,8 @@ import {
   IsUppercase,
   Length,
 } from 'class-validator';
-import {
-  ORGANIZATION_PLANS,
-  type OrganizationPlan,
-} from '../types/organizationType';
+import { ORGANIZATION_PLANS } from '../constants/organization.constants';
+import type { OrganizationPlan } from '@nestgres/contracts';
 
 export class CreateOrganizationDto {
   @IsString()

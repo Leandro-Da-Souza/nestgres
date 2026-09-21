@@ -27,6 +27,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'organizations',
+        canActivate: [authGuard],
+        title: 'Organizations',
+        loadComponent: () =>
+          import('./features/organizations/pages/organizations/organizations').then(
+            (module) => module.Organizations,
+          ),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

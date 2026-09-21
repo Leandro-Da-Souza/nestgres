@@ -11,7 +11,6 @@ import {
   HttpCode,
   Request,
 } from '@nestjs/common';
-import type { OrganizationType } from './types/organizationType';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -19,7 +18,7 @@ import { OrganizationUserType } from './types/organizationUserType';
 import { OrganizationInvoiceType } from './types/organizationInvoiceType';
 import { type AuthenticatedRequestType } from '../common/types/shared.types';
 import { Roles } from '../common/decorators/roles.decorator';
-import { OrganizationSummary } from '@nestgres/contracts';
+import { Organization, OrganizationSummary } from '@nestgres/contracts';
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -29,7 +28,7 @@ export class OrganizationsController {
   @Roles('admin', 'super_admin')
   getOrganizations(
     @Request() req: AuthenticatedRequestType,
-  ): Promise<OrganizationType[]> {
+  ): Promise<Organization[]> {
     return this.organizationsService.getOrganizations(req.user);
   }
 
@@ -38,7 +37,7 @@ export class OrganizationsController {
   getOrganizationById(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: AuthenticatedRequestType,
-  ): Promise<OrganizationType> {
+  ): Promise<Organization> {
     return this.organizationsService.getOrganizationById(id, req.user);
   }
 
@@ -46,7 +45,7 @@ export class OrganizationsController {
   @Post()
   createOrganization(
     @Body() body: CreateOrganizationDto,
-  ): Promise<OrganizationType> {
+  ): Promise<Organization> {
     return this.organizationsService.createOrganization(body);
   }
 
@@ -55,7 +54,7 @@ export class OrganizationsController {
   updateOrganization(
     @Param('id', ParseIntPipe) id: number,
     @Body() changes: UpdateOrganizationDto,
-  ): Promise<OrganizationType> {
+  ): Promise<Organization> {
     return this.organizationsService.updateOrganization(id, changes);
   }
 
