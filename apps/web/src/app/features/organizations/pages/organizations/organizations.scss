@@ -1,0 +1,70 @@
+.table-container {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th,
+  td {
+    padding: 0.875rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  td {
+    color: var(--text-primary);
+  }
+
+  tbody tr {
+    transition: background-color 120ms ease;
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+
+    &:last-child td {
+      border-bottom: 0;
+    }
+  }
+}
+
+.plan-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+
+  border-radius: 0.375rem;
+
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: capitalize;
+
+  &--free {
+    background: #f3f4f6;
+    color: #4b5563;
+  }
+
+  &--pro {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  &--enterprise {
+    background: #ede9fe;
+    color: #6d28d9;
+  }
+}

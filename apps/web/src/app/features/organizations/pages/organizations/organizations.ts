@@ -1,10 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { OrganizationService } from '../../organization.service';
 import { async, map } from 'rxjs';
-import { AsyncPipe, JsonPipe } from '@angular/common';
+import { AsyncPipe, DatePipe, JsonPipe } from '@angular/common';
 
 @Component({
-  imports: [AsyncPipe, JsonPipe],
+  imports: [AsyncPipe, DatePipe],
   selector: 'app-organizations',
   styleUrl: './organizations.scss',
   templateUrl: './organizations.html',
@@ -14,7 +14,6 @@ export class Organizations {
 
   protected organizationData$ = this.orgService.getOrganizations().pipe(
     map((response) => {
-      console.log(response);
       return response.data;
     }),
   );

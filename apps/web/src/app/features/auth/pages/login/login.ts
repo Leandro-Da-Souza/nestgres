@@ -33,7 +33,6 @@ export class Login {
 
     this.auth.login(credentials).subscribe({
       next: (response) => {
-        console.log(response.data.user);
         this.router.navigate(['/dashboard']);
       },
       error: (error: unknown) => {

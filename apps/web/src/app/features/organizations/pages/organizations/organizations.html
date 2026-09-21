@@ -1,3 +1,33 @@
-@if( organizationData$ | async; as organizationData ) {
-  <pre>{{ organizationData | json }}</pre>
+@if( organizationData$ | async; as organizations ) {
+  <div class="table-container">
+    <table>
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Plan</th>
+        <th>Country</th>
+        <th>Created</th>
+      </tr>
+      </thead>
+
+      <tbody>
+        @for (org of organizations; track org.id)  {
+          <tr>
+            <td>{{ org.name }}</td>
+            <td>
+              <span class="plan-badge" [class]="'plan-badge plan-badge--' + org.plan">
+                {{ org.plan }}
+              </span>
+            </td>
+            <td>{{ org.countryCode }}</td>
+            <td>{{ org.createdAt | date }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4">No organization found</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 }
