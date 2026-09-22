@@ -21,6 +21,12 @@
             </td>
             <td>{{ org.countryCode }}</td>
             <td>{{ org.createdAt | date }}</td>
+            <td>
+              <app-button type="button" [variant]="'primary'"
+                          (click)="handleNavigation(org.id)">More
+                Info</app-button>
+<!--              <a [routerLink]="['/organizations', org.id]">More Info</a>-->
+            </td>
           </tr>
         } @empty {
           <tr>

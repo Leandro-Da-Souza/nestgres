@@ -4,6 +4,7 @@ import { authGuard } from './features/auth/guards/auth.guard';
 import { guestGuard } from './features/auth/guards/guest.guard';
 import { AuthenticatedLayout } from './layouts/authenticated-layout/authenticated-layout/authenticated-layout';
 import { NotFound } from './features/not-found/not-found';
+import { organizationDetailResolver } from './features/organizations/resolvers/organization-detail-resolver';
 
 export const routes: Routes = [
   {
@@ -33,6 +34,17 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/organizations/pages/organizations/organizations').then(
             (module) => module.Organizations,
+          ),
+      },
+      {
+        path: 'organizations/:id',
+        canActivate: [authGuard],
+        resolve: {
+          detail: organizationDetailResolver,
+        },
+        loadComponent: () =>
+          import('./features/organizations/pages/organization-detail/organization-detail').then(
+            (module) => module.OrganizationDetail,
           ),
       },
       {
