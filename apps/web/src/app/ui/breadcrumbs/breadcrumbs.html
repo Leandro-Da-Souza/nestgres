@@ -1,8 +1,10 @@
-@if(breadcrumbs().length > 0) {
-  <ul>
+@if (breadcrumbs().length > 0) {
+  <ul class="breadcrumbs">
     @for (breadcrumb of breadcrumbs(); track breadcrumb.label) {
-      <li>
-        <a [routerLink]="[breadcrumb.url]">{{ breadcrumb.label }}</a>
+      <li class="breadcrumbs__item">
+        <a [routerLink]="[breadcrumb.url]">
+          {{ breadcrumb.label }}
+        </a>
       </li>
     }
   </ul>
