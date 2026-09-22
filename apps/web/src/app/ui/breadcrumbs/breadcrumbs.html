@@ -1,0 +1,9 @@
+@if(breadcrumbs().length > 0) {
+  <ul>
+    @for (breadcrumb of breadcrumbs(); track breadcrumb.label) {
+      <li>
+        <a [routerLink]="[breadcrumb.url]">{{ breadcrumb.label }}</a>
+      </li>
+    }
+  </ul>
+}

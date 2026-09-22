@@ -4,6 +4,7 @@ import { map } from 'rxjs';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { Button } from '../../../../ui/button/button';
+import { Breadcrumbs } from '../../../../ui/breadcrumbs/breadcrumbs';
 
 @Component({
   imports: [AsyncPipe, DatePipe, Button],

@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import type { Organization, OrganizationSummary } from '@nestgres/contracts';
 import { OrganizationDetailData } from '../../resolvers/organization-detail-resolver';
 import { JsonPipe } from '@angular/common';
+import { Breadcrumbs } from '../../../../ui/breadcrumbs/breadcrumbs';
 
 @Component({
   imports: [JsonPipe],

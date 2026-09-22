@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import { Data, Routes } from '@angular/router';
 import { Login } from './features/auth/pages/login/login';
 import { authGuard } from './features/auth/guards/auth.guard';
 import { guestGuard } from './features/auth/guards/guest.guard';
@@ -20,8 +20,8 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        canActivate: [authGuard],
         title: 'Dashboard',
+        data: { breadcrumb: 'Dashboard' },
         loadComponent: () =>
           import('./features/dashboard/pages/dashboard/dashboard').then(
             (module) => module.Dashboard,
@@ -29,23 +29,32 @@ export const routes: Routes = [
       },
       {
         path: 'organizations',
-        canActivate: [authGuard],
         title: 'Organizations',
-        loadComponent: () =>
-          import('./features/organizations/pages/organizations/organizations').then(
-            (module) => module.Organizations,
-          ),
-      },
-      {
-        path: 'organizations/:id',
-        canActivate: [authGuard],
-        resolve: {
-          detail: organizationDetailResolver,
-        },
-        loadComponent: () =>
-          import('./features/organizations/pages/organization-detail/organization-detail').then(
-            (module) => module.OrganizationDetail,
-          ),
+        data: { breadcrumb: 'Organizations' },
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./features/organizations/pages/organizations/organizations').then(
+                (module) => module.Organizations,
+              ),
+          },
+          {
+            path: ':id',
+            title: 'Organization details',
+            resolve: {
+              detail: organizationDetailResolver,
+            },
+            data: {
+              breadcrumb: (data: Data): string => data['detail'].organization.name,
+            },
+            loadComponent: () =>
+              import('./features/organizations/pages/organization-detail/organization-detail').then(
+                (module) => module.OrganizationDetail,
+              ),
+          },
+        ],
       },
       {
         path: '',
