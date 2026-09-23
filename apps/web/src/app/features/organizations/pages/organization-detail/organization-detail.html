@@ -1,1 +1,34 @@
+<section class="organization-details__information">
+  <h2>Organization information</h2>
+
+  <dl class="organization-information">
+    <div class="organization-information__item">
+      <dt>Plan</dt>
+      <dd>
+        <span
+          class="plan-badge"
+          [class.plan-badge--enterprise]="organization().plan === 'enterprise'"
+          [class.plan-badge--pro]="organization().plan === 'pro'"
+          [class.plan-badge--free]="organization().plan === 'free'"
+        >
+          {{ organization().plan }}
+        </span>
+      </dd>
+    </div>
+
+    <div class="organization-information__item">
+      <dt>Country</dt>
+      <dd>{{ organization().countryCode }}</dd>
+    </div>
+
+    <div class="organization-information__item">
+      <dt>Created</dt>
+      <dd>{{ organization().createdAt | date: 'mediumDate' }}</dd>
+    </div>
+  </dl>
+</section>
+<div class="organization-details__stats">
+  <app-stat-card label="Users" [value]="summary().numberOfUsers" ></app-stat-card>
+  <app-stat-card label="Invoices" [value]="summary().numberOfInvoices"></app-stat-card>
+</div>
 <app-bar-chart [data]="organizationDetailChartData()" [stacked]="true"></app-bar-chart>

@@ -1,0 +1,44 @@
+.organization-details__information {
+  max-width: 33rem;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.organization-information {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+
+  &__item {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    align-items: center;
+    padding-block: var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  dt {
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--color-text);
+  }
+}
+
+.organization-details {
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 16rem));
+    gap: var(--space-4);
+    margin-block: var(--space-6);
+  }
+}

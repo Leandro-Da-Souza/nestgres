@@ -1,19 +1,15 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import type {
-  Currency,
-  Organization,
-  OrganizationPlan,
-  OrganizationSummary,
-} from '@nestgres/contracts';
+import type { Organization, OrganizationSummary } from '@nestgres/contracts';
 import { OrganizationDetailData } from '../../resolvers/organization-detail-resolver';
-import { JsonPipe } from '@angular/common';
 import { BarChart } from '../../../../ui/bar-chart/bar-chart.component';
 import { ChartData } from 'chart.js';
+import { StatCard } from '../../../../ui/stat-card/stat-card';
+import { DatePipe } from '@angular/common';
 
 @Component({
-  imports: [BarChart],
+  imports: [BarChart, StatCard, DatePipe],
   selector: 'app-organization-detail',
   styleUrl: './organization-detail.scss',
   templateUrl: './organization-detail.html',
