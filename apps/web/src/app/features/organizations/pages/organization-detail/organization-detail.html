@@ -5,14 +5,7 @@
     <div class="organization-information__item">
       <dt>Plan</dt>
       <dd>
-        <span
-          class="plan-badge"
-          [class.plan-badge--enterprise]="organization().plan === 'enterprise'"
-          [class.plan-badge--pro]="organization().plan === 'pro'"
-          [class.plan-badge--free]="organization().plan === 'free'"
-        >
-          {{ organization().plan }}
-        </span>
+        <app-plan-badge [plan]="organization().plan"></app-plan-badge>
       </dd>
     </div>
 
@@ -31,4 +24,5 @@
   <app-stat-card label="Users" [value]="summary().numberOfUsers" ></app-stat-card>
   <app-stat-card label="Invoices" [value]="summary().numberOfInvoices"></app-stat-card>
 </div>
-<app-bar-chart [data]="organizationDetailChartData()" [stacked]="true"></app-bar-chart>
+<app-bar-chart [data]="organizationDetailChartData()" [stacked]="true"
+               title="Invoice payment status by currency"></app-bar-chart>

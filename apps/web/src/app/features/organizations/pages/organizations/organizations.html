@@ -15,9 +15,7 @@
           <tr>
             <td>{{ org.name }}</td>
             <td>
-              <span class="plan-badge" [class]="'plan-badge plan-badge--' + org.plan">
-                {{ org.plan }}
-              </span>
+              <app-plan-badge [plan]="org.plan"></app-plan-badge>
             </td>
             <td>{{ org.countryCode }}</td>
             <td>{{ org.createdAt | date }}</td>
@@ -25,7 +23,6 @@
               <app-button type="button" [variant]="'primary'"
                           (click)="handleNavigation(org.id)">More
                 Info</app-button>
-<!--              <a [routerLink]="['/organizations', org.id]">More Info</a>-->
             </td>
           </tr>
         } @empty {

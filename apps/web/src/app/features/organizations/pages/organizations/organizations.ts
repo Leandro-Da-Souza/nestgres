@@ -4,10 +4,10 @@ import { map } from 'rxjs';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { Button } from '../../../../ui/button/button';
-import { Breadcrumbs } from '../../../../ui/breadcrumbs/breadcrumbs';
+import { PlanBadge } from '../../../../ui/plan-badge/plan-badge';
 
 @Component({
-  imports: [AsyncPipe, DatePipe, Button],
+  imports: [AsyncPipe, DatePipe, Button, PlanBadge],
   selector: 'app-organizations',
   styleUrl: './organizations.scss',
   templateUrl: './organizations.html',

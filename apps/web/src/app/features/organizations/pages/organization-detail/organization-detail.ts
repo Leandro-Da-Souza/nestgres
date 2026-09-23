@@ -7,9 +7,10 @@ import { BarChart } from '../../../../ui/bar-chart/bar-chart.component';
 import { ChartData } from 'chart.js';
 import { StatCard } from '../../../../ui/stat-card/stat-card';
 import { DatePipe } from '@angular/common';
+import { PlanBadge } from '../../../../ui/plan-badge/plan-badge';
 
 @Component({
-  imports: [BarChart, StatCard, DatePipe],
+  imports: [BarChart, StatCard, DatePipe, PlanBadge],
   selector: 'app-organization-detail',
   styleUrl: './organization-detail.scss',
   templateUrl: './organization-detail.html',
