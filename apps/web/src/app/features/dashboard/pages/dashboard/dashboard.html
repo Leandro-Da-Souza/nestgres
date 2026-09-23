@@ -1,6 +1,6 @@
   <div class="organization-grouped-bar">
-    <app-grouped-bar-chart [title]="selectedCurrency() + ' invoices by organization'"
-                           [data]="organizationChartData()"></app-grouped-bar-chart>
+    <app-bar-chart [title]="selectedCurrency() + ' invoices by organization'"
+                           [data]="organizationChartData()"></app-bar-chart>
     <div class="organization-grouped-bar__currency-container">
       @for (cur of allowedCurrencies; track cur) {
         <app-button
