@@ -1,12 +1,28 @@
-  <div class="organization-grouped-bar">
-    <app-bar-chart [title]="selectedCurrency() + ' invoices by organization'"
-                           [data]="organizationChartData()"></app-bar-chart>
-    <div class="organization-grouped-bar__currency-container">
+<div class="organization-grouped-bar">
+  <div class="organization-grouped-bar__toolbar">
+    <span class="organization-grouped-bar__currency-label">
+      Currency
+    </span>
+
+    <div
+      class="organization-grouped-bar__currency-container"
+      role="group"
+      aria-label="Select currency"
+    >
       @for (cur of allowedCurrencies; track cur) {
         <app-button
           (click)="handleSelectCurrency(cur)"
-          class="organization-group-bar__currency-container__btn"
-          [variant]="selectedCurrency() === cur ? 'primary' : 'secondary'">{{ cur }}</app-button>
+          [attr.aria-pressed]="selectedCurrency() === cur"
+          [variant]="selectedCurrency() === cur ? 'primary' : 'secondary'"
+        >
+          {{ cur }}
+        </app-button>
       }
     </div>
   </div>
+
+  <app-bar-chart
+    [title]="selectedCurrency() + ' invoices by organization'"
+    [data]="organizationChartData()"
+  />
+</div>
