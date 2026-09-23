@@ -1,15 +1,14 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { DashboardService } from '../../dashboard.service';
 import { map } from 'rxjs';
-import { AsyncPipe } from '@angular/common';
-import { GroupedBarChart } from '../../../../ui/grouped-bar-chart/grouped-bar-chart';
+import { BarChart } from '../../../../ui/bar-chart/bar-chart.component';
 import { ChartData } from 'chart.js';
 import { Currency } from '@nestgres/contracts';
 import { Button } from '../../../../ui/button/button';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
-  imports: [GroupedBarChart, Button],
+  imports: [BarChart, Button],
   selector: 'app-dashboard',
   styleUrl: './dashboard.scss',
   templateUrl: './dashboard.html',

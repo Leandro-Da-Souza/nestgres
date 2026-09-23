@@ -4,13 +4,14 @@ import { ChartConfiguration, ChartData } from 'chart.js';
 
 @Component({
   imports: [BaseChartDirective],
-  selector: 'app-grouped-bar-chart',
-  styleUrl: './grouped-bar-chart.scss',
-  templateUrl: './grouped-bar-chart.html',
+  selector: 'app-bar-chart',
+  styleUrl: './bar-chart.component.scss',
+  templateUrl: './bar-chart.html',
 })
-export class GroupedBarChart {
+export class BarChart {
   readonly title = input('');
   readonly data = input.required<ChartData<'bar'>>();
+  readonly stacked = input(false);
 
   readonly options = computed<ChartConfiguration<'bar'>['options']>(() => ({
     responsive: true,
@@ -25,8 +26,12 @@ export class GroupedBarChart {
       },
     },
     scales: {
+      x: {
+        stacked: this.stacked(),
+      },
       y: {
         beginAtZero: true,
+        stacked: this.stacked(),
       },
     },
   }));
