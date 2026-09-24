@@ -1,1 +1,3 @@
-<p>invoices works!</p>
+@for (invoice of invoices() ; track invoice.id) {
+  <pre>{{ invoice | json }}</pre>
+}
