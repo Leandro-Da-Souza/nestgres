@@ -57,6 +57,21 @@ export const routes: Routes = [
         ],
       },
       {
+        path: 'invoices',
+        title: 'Invoices',
+        data: { breadcrumb: 'Invoices' },
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./features/invoices/pages/invoices/invoices').then(
+                (module) => module.Invoices,
+              ),
+          },
+        ],
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',
