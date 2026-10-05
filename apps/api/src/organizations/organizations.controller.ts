@@ -32,6 +32,14 @@ export class OrganizationsController {
     return this.organizationsService.getOrganizations(req.user);
   }
 
+  @Roles('admin', 'super_admin')
+  @Get('options')
+  getOrganizationOptions(
+    @Request() req: AuthenticatedRequestType,
+  ): Promise<Pick<Organization, 'id' | 'name'>[]> {
+    return this.organizationsService.getOrganizationOptions(req.user);
+  }
+
   @Get(':id')
   @Roles('admin', 'super_admin')
   getOrganizationById(

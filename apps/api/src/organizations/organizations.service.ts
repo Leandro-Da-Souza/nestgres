@@ -348,4 +348,29 @@ export class OrganizationsService {
       );
     return result.rows;
   }
+
+  public async getOrganizationOptions(
+    user: JwtPayloadType,
+  ): Promise<Pick<Organization, 'id' | 'name'>[]> {
+    const { organizationId, role } = user;
+
+    const isSuperAdmin = role === 'super_admin';
+
+    if (!isSuperAdmin && organizationId === null) {
+      throw new ForbiddenException();
+    }
+
+    const organizationConstraint = isSuperAdmin ? '' : 'WHERE o.id = $1';
+    const values = isSuperAdmin ? [] : [organizationId];
+
+    const query = {
+      text: `SELECT o.id, o.name FROM organizations as o ${organizationConstraint} ORDER BY o.id`,
+      values,
+    };
+
+    const result =
+      await this.pool.query<Pick<Organization, 'id' | 'name'>>(query);
+
+    return result.rows;
+  }
 }

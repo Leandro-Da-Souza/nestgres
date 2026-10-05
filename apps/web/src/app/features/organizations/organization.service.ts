@@ -23,4 +23,8 @@ export class OrganizationService {
   public getOrganizationSummary(id: number): Observable<ApiResponse<OrganizationSummary>> {
     return this.http.get<ApiResponse<OrganizationSummary>>(`/api/organizations/${id}/summary`);
   }
+
+  public getOrganizationOptions(): Observable<ApiResponse<Pick<Organization, 'id' | 'name'>[]>> {
+    return this.http.get<ApiResponse<Pick<Organization, 'id' | 'name'>[]>>('/api/organizations/options');
+  }
 }
