@@ -4,9 +4,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { Invoice } from '@nestgres/contracts';
 import { JsonPipe } from '@angular/common';
+import { StatCard } from '../../../../ui/stat-card/stat-card';
 
 @Component({
-  imports: [JsonPipe],
+  imports: [JsonPipe, StatCard],
   selector: 'app-invoices',
   styleUrl: './invoices.scss',
   templateUrl: './invoices.html',

@@ -1,3 +1,18 @@
+<div class="invoices__container">
+  <app-stat-card
+    class="invoice__container invoice"
+    label="Total Invoices"
+    [value]="invoices().length">
+  </app-stat-card>
+  <app-stat-card label="Paid Invoices"
+                 [value]="invoices().filter(invoice => invoice.status === 'paid').length"></app-stat-card>
+  <app-stat-card label="Open Invoices"
+                 [value]="invoices().filter(invoice => invoice.status === 'open').length"></app-stat-card>
+  <app-stat-card label="Overdue Invoices"
+                 [value]="invoices().filter(invoice => invoice.status === 'overdue').length"></app-stat-card>
+  <app-stat-card label="Void Invoices"
+                 [value]="invoices().filter(invoice => invoice.status === 'void').length"></app-stat-card>
+</div>
+
 @for (invoice of invoices() ; track invoice.id) {
-  <pre>{{ invoice | json }}</pre>
 }
