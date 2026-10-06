@@ -5,6 +5,7 @@ import { guestGuard } from './features/auth/guards/guest.guard';
 import { AuthenticatedLayout } from './layouts/authenticated-layout/authenticated-layout/authenticated-layout';
 import { NotFound } from './features/not-found/not-found';
 import { organizationDetailResolver } from './features/organizations/resolvers/organization-detail-resolver';
+import { invoiceDetailResolver } from './features/invoices/resolvers/invoice-detail-resolver';
 
 export const routes: Routes = [
   {
@@ -67,6 +68,17 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/invoices/pages/invoices/invoices').then(
                 (module) => module.Invoices,
+              ),
+          },
+          {
+            path: ':id',
+            title: 'invoice detail',
+            resolve: {
+              detail: invoiceDetailResolver,
+            },
+            loadComponent: () =>
+              import('./features/invoices/pages/invoice-detail/invoice-detail').then(
+                (module) => module.InvoiceDetail,
               ),
           },
         ],
