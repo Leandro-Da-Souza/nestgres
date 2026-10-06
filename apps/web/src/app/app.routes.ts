@@ -76,6 +76,9 @@ export const routes: Routes = [
             resolve: {
               detail: invoiceDetailResolver,
             },
+            data: {
+              breadcrumb: (data: Data): string => `Invoice #${data['detail'].invoice.id}`,
+            },
             loadComponent: () =>
               import('./features/invoices/pages/invoice-detail/invoice-detail').then(
                 (module) => module.InvoiceDetail,

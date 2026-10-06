@@ -11,7 +11,7 @@ import { Doughnut } from '../../../../ui/doughnut/doughnut';
 import { ChartData } from 'chart.js';
 
 @Component({
-  imports: [StatCard, RouterLink, CurrencyPipe, DatePipe, Doughnut],
+  imports: [RouterLink, CurrencyPipe, DatePipe, Doughnut],
   selector: 'app-invoices',
   styleUrl: './invoices.scss',
   templateUrl: './invoices.html',
