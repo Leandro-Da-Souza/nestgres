@@ -1,29 +1,4 @@
-<div class="invoices__container">
-  <app-stat-card
-    label="Total Invoices"
-    [value]="invoices().length"
-  />
-
-  <app-stat-card
-    label="Paid Invoices"
-    [value]="invoices().filter(invoice => invoice.status === 'paid').length"
-  />
-
-  <app-stat-card
-    label="Open Invoices"
-    [value]="invoices().filter(invoice => invoice.status === 'open').length"
-  />
-
-  <app-stat-card
-    label="Overdue Invoices"
-    [value]="invoices().filter(invoice => invoice.status === 'overdue').length"
-  />
-
-  <app-stat-card
-    label="Void Invoices"
-    [value]="invoices().filter(invoice => invoice.status === 'void').length"
-  />
-</div>
+<app-doughnut [data]="doughnutData()"></app-doughnut>
 
 <div class="invoices__table-container">
   <table class="invoice-table">

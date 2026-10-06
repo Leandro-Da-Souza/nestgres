@@ -10,4 +10,8 @@ export class InvoiceService {
   public getInvoices(): Observable<ApiResponse<Invoice[]>> {
     return this.http.get<ApiResponse<Invoice[]>>('api/invoices');
   }
+
+  public getInvoiceById(id: number): Observable<ApiResponse<Invoice>> {
+    return this.http.get<ApiResponse<Invoice>>(`api/invoices/${id}`);
+  }
 }
