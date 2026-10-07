@@ -7,15 +7,17 @@ import { BarChart } from '../../../../ui/bar-chart/bar-chart.component';
 import { ChartData } from 'chart.js';
 import { StatCard } from '../../../../ui/stat-card/stat-card';
 import { DatePipe } from '@angular/common';
-import { PlanBadge } from '../../../../ui/plan-badge/plan-badge';
+import { Badge } from '../../../../ui/badge/badge';
+import { OrganizationService } from '../../organization.service';
 
 @Component({
-  imports: [BarChart, StatCard, DatePipe, PlanBadge],
+  imports: [BarChart, StatCard, DatePipe, Badge],
   selector: 'app-organization-detail',
   styleUrl: './organization-detail.scss',
   templateUrl: './organization-detail.html',
 })
 export class OrganizationDetail {
+  private readonly organizationService = inject(OrganizationService);
   private readonly route = inject(ActivatedRoute);
   private readonly data = toSignal(this.route.data, { requireSync: true });
   public readonly detail = computed(() => this.data()['detail'] as OrganizationDetailData);
@@ -23,6 +25,8 @@ export class OrganizationDetail {
   public organization = computed(() => this.detail().organization as Organization);
   public summary = computed(() => this.detail().summary as OrganizationSummary);
   public amounts = computed(() => this.summary().amountsByCurrency);
+
+  public badgeMap = this.organizationService.organizationBadgeMap;
 
   public organizationDetailChartData = computed<ChartData<'bar'>>(() => {
     const amounts = this.amounts();

@@ -4,13 +4,21 @@ import { Observable } from 'rxjs';
 import type {
   ApiResponse,
   Organization,
+  OrganizationPlan,
   OrganizationsResponse,
   OrganizationSummary,
 } from '@nestgres/contracts';
+import { BadgeTone } from '../../ui/badge/badge';
 
 @Service()
 export class OrganizationService {
   private readonly http = inject(HttpClient);
+
+  public organizationBadgeMap = new Map<OrganizationPlan, BadgeTone>([
+    ['enterprise', 'success'],
+    ['pro', 'accent'],
+    ['free', 'info'],
+  ]);
 
   public getOrganizations(): Observable<OrganizationsResponse> {
     return this.http.get<OrganizationsResponse>('/api/organizations');
@@ -25,6 +33,8 @@ export class OrganizationService {
   }
 
   public getOrganizationOptions(): Observable<ApiResponse<Pick<Organization, 'id' | 'name'>[]>> {
-    return this.http.get<ApiResponse<Pick<Organization, 'id' | 'name'>[]>>('/api/organizations/options');
+    return this.http.get<ApiResponse<Pick<Organization, 'id' | 'name'>[]>>(
+      '/api/organizations/options',
+    );
   }
 }

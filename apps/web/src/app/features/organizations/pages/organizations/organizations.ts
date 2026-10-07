@@ -4,10 +4,10 @@ import { map } from 'rxjs';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { Button } from '../../../../ui/button/button';
-import { PlanBadge } from '../../../../ui/plan-badge/plan-badge';
+import { Badge } from '../../../../ui/badge/badge';
 
 @Component({
-  imports: [AsyncPipe, DatePipe, Button, PlanBadge],
+  imports: [AsyncPipe, DatePipe, Button, Badge],
   selector: 'app-organizations',
   styleUrl: './organizations.scss',
   templateUrl: './organizations.html',
@@ -21,6 +21,8 @@ export class Organizations {
       return response.data;
     }),
   );
+
+  public badgeMap = this.orgService.organizationBadgeMap;
 
   protected handleNavigation(id: number) {
     void this.router.navigate(['organizations', id]);

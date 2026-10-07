@@ -5,7 +5,8 @@
     <div class="organization-information__item">
       <dt>Plan</dt>
       <dd>
-        <app-plan-badge [plan]="organization().plan"></app-plan-badge>
+        <app-badge [label]="organization().plan"
+                   [tone]="badgeMap.get(organization().plan) ?? 'neutral'"></app-badge>
       </dd>
     </div>
 

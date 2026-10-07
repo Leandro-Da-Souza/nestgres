@@ -1,4 +1,4 @@
-.plan-badge {
+.badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
 
@@ -9,17 +9,22 @@
   line-height: 1;
   text-transform: capitalize;
 
-  &--free {
-    background: #f3f4f6;
-    color: #4b5563;
+  &--success {
+    background: #dcfce7;
+    color: #15803d;
   }
 
-  &--pro {
-    background: #dbeafe;
-    color: #1d4ed8;
+  &--warning {
+    background: #fef3c7;
+    color: #b45309;
   }
 
-  &--enterprise {
+  &--danger {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  &--accent {
     background: #ede9fe;
     color: #6d28d9;
   }
