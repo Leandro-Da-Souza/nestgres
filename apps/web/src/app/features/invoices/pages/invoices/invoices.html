@@ -20,7 +20,10 @@
           <td>#{{ invoice.id }}</td>
           <td>{{ organizationNameById().get(invoice.organizationId) ?? 'Unknown' }}</td>
           <td>{{ invoice.amount | currency: invoice.currency }}</td>
-          <td>{{ invoice.status }}</td>
+          <td>
+            <app-badge [label]="invoice.status"
+                       [tone]="badgeMap.get(invoice.status) ?? 'neutral'"></app-badge>
+          </td>
           <td>{{ invoice.issuedOn | date: 'mediumDate' }}</td>
           <td>{{ invoice.dueOn | date: 'mediumDate' }}</td>
           <td>

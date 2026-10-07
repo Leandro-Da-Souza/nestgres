@@ -9,9 +9,10 @@ import { RouterLink } from '@angular/router';
 import { OrganizationService } from '../../../organizations/organization.service';
 import { Doughnut } from '../../../../ui/doughnut/doughnut';
 import { ChartData } from 'chart.js';
+import { Badge } from '../../../../ui/badge/badge';
 
 @Component({
-  imports: [RouterLink, CurrencyPipe, DatePipe, Doughnut],
+  imports: [RouterLink, CurrencyPipe, DatePipe, Doughnut, Badge],
   selector: 'app-invoices',
   styleUrl: './invoices.scss',
   templateUrl: './invoices.html',
@@ -53,4 +54,6 @@ export class Invoices {
       ],
     };
   });
+
+  public badgeMap = this.invoiceService.badgeMap;
 }
