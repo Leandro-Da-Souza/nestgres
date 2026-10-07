@@ -1,39 +1,36 @@
 @if( organizationData$ | async; as organizations ) {
-  <div class="table-container">
-    <table>
-      <thead>
-      <tr>
-        <th>Name</th>
-        <th>Plan</th>
-        <th>Country</th>
-        <th>Created</th>
-      </tr>
-      </thead>
+  <app-table>
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Plan</th>
+      <th>Country</th>
+      <th>Created</th>
+      <th><span class="sr-only">Actions</span></th>
+    </tr>
+    </thead>
 
-      <tbody>
-        @for (org of organizations; track org.id)  {
-          <tr>
-            <td>{{ org.name }}</td>
-            <td>
-              <app-badge
-                [label]="org.plan"
-                [tone]="badgeMap.get(org.plan) ?? 'neutral'"
-              />
-            </td>
-            <td>{{ org.countryCode }}</td>
-            <td>{{ org.createdAt | date }}</td>
-            <td>
-              <app-button type="button" [variant]="'primary'"
-                          (click)="handleNavigation(org.id)">More
-                Info</app-button>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="4">No organization found</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+    <tbody>
+      @for (org of organizations; track org.id)  {
+        <tr>
+          <td>{{ org.name }}</td>
+          <td>
+            <app-badge
+              [label]="org.plan"
+              [tone]="badgeMap.get(org.plan) ?? 'neutral'"
+            />
+          </td>
+          <td>{{ org.countryCode }}</td>
+          <td>{{ org.createdAt | date }}</td>
+          <td>
+            <a [routerLink]="['/organizations', org.id]">View</a>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5">No organization found</td>
+        </tr>
+      }
+    </tbody>
+  </app-table>
 }

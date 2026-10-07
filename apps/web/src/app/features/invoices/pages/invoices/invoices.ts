@@ -10,11 +10,11 @@ import { OrganizationService } from '../../../organizations/organization.service
 import { Doughnut } from '../../../../ui/doughnut/doughnut';
 import { ChartData } from 'chart.js';
 import { Badge } from '../../../../ui/badge/badge';
+import { Table } from '../../../../ui/table/table';
 
 @Component({
-  imports: [RouterLink, CurrencyPipe, DatePipe, Doughnut, Badge],
+  imports: [RouterLink, CurrencyPipe, DatePipe, Doughnut, Badge, Table],
   selector: 'app-invoices',
-  styleUrl: './invoices.scss',
   templateUrl: './invoices.html',
 })
 export class Invoices {
