@@ -1,3 +1,61 @@
-<pre>
-  {{ detail() | json }}
-</pre>
+<section class="invoice-details">
+  <header class="invoice-details__header">
+    <div>
+      <span class="invoice-details__eyebrow">
+        Invoice #{{ invoice().id }}
+      </span>
+
+      <h1 class="invoice-details__amount">
+        {{ invoice().amount | currency: invoice().currency }}
+      </h1>
+
+      <a
+        class="invoice-details__organization"
+        [routerLink]="['/organizations', organization().id]"
+      >
+        {{ organization().name }}
+      </a>
+    </div>
+
+    <app-badge
+      [label]="invoice().status"
+      [tone]="badgeMap.get(invoice().status) ?? 'neutral'"
+    />
+  </header>
+
+  <div
+    class="invoice-details__payment"
+    [class.invoice-details__payment--overdue]="daysUntilDue() < 0"
+  >
+    <span>Payment status</span>
+    <strong>{{ paymentDueLabel() }}</strong>
+  </div>
+
+  <dl class="invoice-information">
+    <div class="invoice-information__item">
+      <dt>Issued</dt>
+      <dd>{{ invoice().issuedOn | date: 'mediumDate' }}</dd>
+    </div>
+
+    <div class="invoice-information__item">
+      <dt>Due</dt>
+      <dd>{{ invoice().dueOn | date: 'mediumDate' }}</dd>
+    </div>
+
+    <div class="invoice-information__item">
+      <dt>Paid</dt>
+      <dd>
+        @if (invoice().paidAt) {
+          {{ invoice().paidAt | date: 'mediumDate' }}
+        } @else {
+          <span class="invoice-information__muted">Not paid</span>
+        }
+      </dd>
+    </div>
+
+    <div class="invoice-information__item">
+      <dt>Created</dt>
+      <dd>{{ invoice().createdAt | date: 'medium' }}</dd>
+    </div>
+  </dl>
+</section>
