@@ -347,4 +347,25 @@ export class InvoicesService {
     const result = await this.pool.query<CurrencyTotal>(query);
     return result.rows;
   }
+
+  public async reconcileStatuses(): Promise<number> {
+    const query = {
+      text: `
+        UPDATE invoices
+        SET status = CASE
+          WHEN due_on < CURRENT_DATE THEN 'overdue'
+          ELSE 'open'
+        END
+        WHERE status IN ('open', 'overdue')
+          AND status IS DISTINCT FROM CASE
+            WHEN due_on < CURRENT_DATE THEN 'overdue'
+            ELSE 'open'
+          END  
+      `,
+    };
+
+    const result = await this.pool.query(query);
+
+    return result.rowCount ?? 0;
+  }
 }
